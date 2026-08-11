@@ -1,0 +1,17 @@
+# Java / Maven
+target/
+*.class
+
+# Node
+node_modules/
+dist/
+
+# Ambiente
+.env
+.env.local
+
+# Sistema ed editor
+.DS_Store
+.idea/
+.vscode/
+*.iml
