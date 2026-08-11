@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:18
+    container_name: tasky-db
+    environment:
+      POSTGRES_DB: tasky
+      POSTGRES_USER: tasky
+      POSTGRES_PASSWORD: tasky
+    ports:
+      - "5433:5432"
+    volumes:
+      - tasky-db-data:/var/lib/postgresql
+
+volumes:
+  tasky-db-data:

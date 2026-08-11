@@ -19,10 +19,25 @@ e da fornitore quando si candida — ma solo dopo aver completato la verifica.
 
 ```
 Tasky/
-├── backend/    API REST in Spring Boot
-├── frontend/   applicazione React
-└── docs/       diagrammi e documentazione
+├── backend/             API REST in Spring Boot
+├── frontend/            applicazione React (da creare)
+└── docker-compose.yml   PostgreSQL per lo sviluppo
 ```
+
+## Avvio in sviluppo
+
+Il database gira in Docker sulla porta **5433**, per non entrare in conflitto con
+eventuali PostgreSQL già installati sulla 5432.
+
+```bash
+docker compose up -d
+```
+
+```bash
+cd backend && mvn spring-boot:run
+```
+
+Il backend risponde su `http://localhost:8080`.
 
 ## Flusso principale
 
