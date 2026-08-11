@@ -21,6 +21,7 @@ e da fornitore quando si candida — ma solo dopo aver completato la verifica.
 Tasky/
 ├── backend/             API REST in Spring Boot
 ├── frontend/            applicazione React (da creare)
+├── docs/                diagrammi
 └── docker-compose.yml   PostgreSQL per lo sviluppo
 ```
 
@@ -51,7 +52,10 @@ Il backend risponde su `http://localhost:8080`.
 
 ## Modello dati
 
-Otto tabelle. Diagramma completo su [drawSQL](https://drawsql.app/teams/alessandro-nappa/diagrams/tasky).
+Otto tabelle. Diagramma completo su [drawSQL](https://drawsql.app/teams/alessandro-nappa/diagrams/tasky),
+esportato anche in [docs/modello-dati.webp](docs/modello-dati.webp).
+
+![Modello dati di Tasky](docs/modello-dati.webp)
 
 ```mermaid
 erDiagram
