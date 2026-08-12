@@ -1,5 +1,9 @@
 package it.tasky;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.Duration;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,14 +44,18 @@ public class AutenticazioneController {
     }
 
     public record RegistrazioneRichiesta(
-            String email, String password, String nomeCompleto, String telefono, String citta) {}
+            @Email @NotBlank String email,
+            @Size(min = 8) String password,
+            @NotBlank String nomeCompleto,
+            String telefono,
+            String citta) {}
 
-    public record LoginRichiesta(String email, String password) {}
+    public record LoginRichiesta(@NotBlank String email, @NotBlank String password) {}
 
     public record RispostaToken(String token) {}
 
     @PostMapping("/registrazione")
-    public RispostaToken registrazione(@RequestBody RegistrazioneRichiesta richiesta) {
+    public RispostaToken registrazione(@Valid @RequestBody RegistrazioneRichiesta richiesta) {
         if (utenti.findByEmail(richiesta.email()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email già registrata");
         }
@@ -62,7 +70,7 @@ public class AutenticazioneController {
     }
 
     @PostMapping("/login")
-    public RispostaToken login(@RequestBody LoginRichiesta richiesta) {
+    public RispostaToken login(@Valid @RequestBody LoginRichiesta richiesta) {
         Utente utente = utenti.findByEmail(richiesta.email())
                 .filter(u -> passwordEncoder.matches(richiesta.password(), u.getHashPassword()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenziali non valide"));
