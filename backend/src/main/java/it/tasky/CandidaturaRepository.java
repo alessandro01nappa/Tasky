@@ -7,5 +7,7 @@ public interface CandidaturaRepository extends JpaRepository<Candidatura, Long> 
 
     List<Candidatura> findByRichiestaId(Long richiestaId);
 
+    List<Candidatura> findByProfiloFornitoreId(Long profiloFornitoreId);
+
     boolean existsByRichiestaIdAndProfiloFornitoreId(Long richiestaId, Long profiloFornitoreId);
 }

@@ -97,6 +97,13 @@ public class RichiestaController {
                 .toList();
     }
 
+    @GetMapping("/mie")
+    public List<RispostaRichiesta> mie(@AuthenticationPrincipal Jwt token) {
+        return richieste.findByClienteId(utenteCorrente.da(token).getId()).stream()
+                .map(RispostaRichiesta::da)
+                .toList();
+    }
+
     @GetMapping("/{id}")
     public RispostaRichiesta dettaglio(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
         RichiestaServizio richiesta = richieste

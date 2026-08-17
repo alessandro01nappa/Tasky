@@ -2,12 +2,14 @@ package it.tasky;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,14 +23,20 @@ public class FornitoreController {
 
     private final ProfiloFornitoreRepository profili;
     private final CategoriaServizioRepository categorie;
+    private final CandidaturaRepository candidature;
+    private final RecensioneRepository recensioni;
     private final UtenteCorrente utenteCorrente;
 
     public FornitoreController(
             ProfiloFornitoreRepository profili,
             CategoriaServizioRepository categorie,
+            CandidaturaRepository candidature,
+            RecensioneRepository recensioni,
             UtenteCorrente utenteCorrente) {
         this.profili = profili;
         this.categorie = categorie;
+        this.candidature = candidature;
+        this.recensioni = recensioni;
         this.utenteCorrente = utenteCorrente;
     }
 
@@ -58,6 +66,35 @@ public class FornitoreController {
         }
     }
 
+    /** Una candidatura vista da chi l'ha inviata: interessa la richiesta, non il fornitore. */
+    public record MiaCandidatura(
+            Long id,
+            Long richiestaId,
+            String titoloRichiesta,
+            StatoRichiesta statoRichiesta,
+            String messaggio,
+            BigDecimal prezzoOfferto,
+            StatoCandidatura stato,
+            LocalDateTime dataCreazione) {
+
+        static MiaCandidatura da(Candidatura candidatura) {
+            RichiestaServizio richiesta = candidatura.getRichiesta();
+            return new MiaCandidatura(
+                    candidatura.getId(),
+                    richiesta.getId(),
+                    richiesta.getTitolo(),
+                    richiesta.getStato(),
+                    candidatura.getMessaggio(),
+                    candidatura.getPrezzoOfferto(),
+                    candidatura.getStato(),
+                    candidatura.getDataCreazione());
+        }
+    }
+
+    public record VoceRecensione(int voto, String commento, LocalDateTime dataCreazione) {}
+
+    public record RecensioniFornitore(double media, int numero, List<VoceRecensione> recensioni) {}
+
     @PostMapping
     public RispostaFornitore crea(@Valid @RequestBody DatiFornitore dati, @AuthenticationPrincipal Jwt token) {
         Utente utente = utenteCorrente.da(token);
@@ -80,6 +117,26 @@ public class FornitoreController {
         ProfiloFornitore profilo = profiloMio(token);
         applica(dati, profilo);
         return RispostaFornitore.da(profili.save(profilo));
+    }
+
+    @GetMapping("/candidature")
+    public List<MiaCandidatura> mieCandidature(@AuthenticationPrincipal Jwt token) {
+        return candidature.findByProfiloFornitoreId(profiloMio(token).getId()).stream()
+                .map(MiaCandidatura::da)
+                .toList();
+    }
+
+    @GetMapping("/{id}/recensioni")
+    public RecensioniFornitore recensioniRicevute(@PathVariable Long id) {
+        if (!profili.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profilo fornitore non trovato");
+        }
+        List<Recensione> ricevute = recensioni.findByIncaricoProfiloFornitoreId(id);
+        double media = ricevute.stream().mapToInt(Recensione::getVoto).average().orElse(0);
+        List<VoceRecensione> voci = ricevute.stream()
+                .map(r -> new VoceRecensione(r.getVoto(), r.getCommento(), r.getDataCreazione()))
+                .toList();
+        return new RecensioniFornitore(Math.round(media * 10) / 10.0, ricevute.size(), voci);
     }
 
     private void applica(DatiFornitore dati, ProfiloFornitore profilo) {

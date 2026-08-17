@@ -73,6 +73,9 @@ public class CandidaturaController {
         }
 
         RichiestaServizio richiesta = richiestaEsistente(richiestaId);
+        if (richiesta.getCliente().getId().equals(utente.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non puoi candidarti a una tua richiesta");
+        }
         if (richiesta.getStato() != StatoRichiesta.APERTA) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La richiesta non è aperta");
         }

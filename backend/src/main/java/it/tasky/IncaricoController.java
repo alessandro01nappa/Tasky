@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -46,17 +48,20 @@ public class IncaricoController {
             Long richiestaId,
             String titoloRichiesta,
             String fornitore,
+            String ruolo,
             BigDecimal prezzoConcordato,
             StatoIncarico stato,
             LocalDateTime dataCreazione,
             LocalDateTime dataCompletamento) {
 
-        static RispostaIncarico da(Incarico incarico) {
+        static RispostaIncarico da(Incarico incarico, Long utenteId) {
+            boolean cliente = incarico.getRichiesta().getCliente().getId().equals(utenteId);
             return new RispostaIncarico(
                     incarico.getId(),
                     incarico.getRichiesta().getId(),
                     incarico.getRichiesta().getTitolo(),
                     incarico.getProfiloFornitore().getUtente().getNomeCompleto(),
+                    cliente ? "CLIENTE" : "FORNITORE",
                     incarico.getPrezzoConcordato(),
                     incarico.getStato(),
                     incarico.getDataCreazione(),
@@ -71,8 +76,9 @@ public class IncaricoController {
                 .findById(nuovo.candidaturaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Candidatura non trovata"));
 
+        Long utenteId = utenteCorrente.da(token).getId();
         RichiestaServizio richiesta = scelta.getRichiesta();
-        if (!richiesta.getCliente().getId().equals(utenteCorrente.da(token).getId())) {
+        if (!richiesta.getCliente().getId().equals(utenteId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non è una tua richiesta");
         }
         if (richiesta.getStato() != StatoRichiesta.APERTA) {
@@ -96,7 +102,17 @@ public class IncaricoController {
             candidature.save(candidatura);
         }
 
-        return RispostaIncarico.da(incarico);
+        return RispostaIncarico.da(incarico, utenteId);
+    }
+
+    @GetMapping("/miei")
+    public List<RispostaIncarico> miei(@AuthenticationPrincipal Jwt token) {
+        Long utenteId = utenteCorrente.da(token).getId();
+        return Stream.concat(
+                        incarichi.findByRichiestaClienteId(utenteId).stream(),
+                        incarichi.findByProfiloFornitoreUtenteId(utenteId).stream())
+                .map(incarico -> RispostaIncarico.da(incarico, utenteId))
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -107,7 +123,7 @@ public class IncaricoController {
         if (!cliente && !fornitore(incarico, utenteId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incarico non tuo");
         }
-        return RispostaIncarico.da(incarico);
+        return RispostaIncarico.da(incarico, utenteId);
     }
 
     @PutMapping("/{id}/stato")
@@ -116,7 +132,8 @@ public class IncaricoController {
             @PathVariable Long id, @Valid @RequestBody CambioStato cambio, @AuthenticationPrincipal Jwt token) {
 
         Incarico incarico = incaricoEsistente(id);
-        if (!fornitore(incarico, utenteCorrente.da(token).getId())) {
+        Long utenteId = utenteCorrente.da(token).getId();
+        if (!fornitore(incarico, utenteId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo il fornitore può aggiornare il lavoro");
         }
         verificaTransizione(incarico.getStato(), cambio.stato());
@@ -128,7 +145,7 @@ public class IncaricoController {
             richiesta.setStato(StatoRichiesta.COMPLETATA);
             richieste.save(richiesta);
         }
-        return RispostaIncarico.da(incarichi.save(incarico));
+        return RispostaIncarico.da(incarichi.save(incarico), utenteId);
     }
 
     private void verificaTransizione(StatoIncarico attuale, StatoIncarico nuovo) {

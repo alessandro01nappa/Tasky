@@ -287,6 +287,112 @@ class FlussoCompletoTest {
                 .isEqualTo(inesistente.json().get("error").asString());
     }
 
+    @Test
+    void nonCiSiPuoCandidareAllaPropriaRichiesta() {
+        Scenario s = scenario("caso17");
+        // il cliente diventa anche fornitore approvato
+        String cliente = s.cliente();
+        long categoriaId = get("/api/categorie", cliente).json().get(0).get("id").asLong();
+        post(
+                "/api/fornitore",
+                "{\"descrizione\":\"Faccio anche io\",\"zonaOperativa\":\"Milano\",\"categorieIds\":[" + categoriaId
+                        + "]}",
+                cliente);
+        jdbc.update("update profili_fornitore set stato = 'APPROVATO' where utente_id in (" + UTENTI_DI_TEST + ")");
+
+        long miaRichiesta = richiestaAperta(cliente);
+        Risposta risposta = post("/api/richieste/" + miaRichiesta + "/candidature", "{\"messaggio\":\"io\"}", cliente);
+
+        assertThat(risposta.stato()).isEqualTo(403);
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from candidature where richiesta_id = ?", Integer.class, miaRichiesta))
+                .isEqualTo(0);
+    }
+
+    @Test
+    void ilClienteVedeLeProprieRichieste() {
+        Scenario s = scenario("caso18");
+        long apertaId = richiestaAperta(s.cliente());
+        String estraneo = registra("caso18-estraneo");
+
+        List<Long> mie = get("/api/richieste/mie", s.cliente()).json().valueStream()
+                .map(r -> r.get("id").asLong())
+                .toList();
+        // anche quella assegnata, che nella lista pubblica non compare piu'
+        assertThat(mie).contains(s.richiestaId(), apertaId);
+
+        assertThat(get("/api/richieste/mie", estraneo).json()).isEmpty();
+        assertThat(get("/api/richieste/mie", null).stato()).isEqualTo(401);
+    }
+
+    @Test
+    void ilFornitoreVedeLeProprieCandidature() {
+        Scenario s = scenario("caso19");
+        Risposta risposta = get("/api/fornitore/candidature", s.fornitore());
+
+        assertThat(risposta.stato()).isEqualTo(200);
+        JsonNode candidatura = risposta.json().get(0);
+        assertThat(candidatura.get("id").asLong()).isEqualTo(s.candidaturaId());
+        assertThat(candidatura.get("richiestaId").asLong()).isEqualTo(s.richiestaId());
+        assertThat(candidatura.get("titoloRichiesta").asString()).isEqualTo("Lavoro di prova");
+        assertThat(candidatura.get("stato").asString()).isEqualTo("ACCETTATA");
+        assertThat(candidatura.get("statoRichiesta").asString()).isEqualTo("ASSEGNATA");
+        assertThat(risposta.corpo()).doesNotContain("password", "email", "hash");
+
+        // un utente senza profilo fornitore non ha candidature da vedere
+        assertThat(get("/api/fornitore/candidature", s.cliente()).stato()).isEqualTo(404);
+    }
+
+    @Test
+    void entrambiVedonoIProprioIncarichiConIlProprioRuolo() {
+        Scenario s = scenario("caso20");
+
+        JsonNode delCliente = get("/api/incarichi/miei", s.cliente()).json();
+        JsonNode delFornitore = get("/api/incarichi/miei", s.fornitore()).json();
+
+        assertThat(delCliente.size()).isEqualTo(1);
+        assertThat(delCliente.get(0).get("id").asLong()).isEqualTo(s.incaricoId());
+        assertThat(delCliente.get(0).get("ruolo").asString()).isEqualTo("CLIENTE");
+
+        assertThat(delFornitore.size()).isEqualTo(1);
+        assertThat(delFornitore.get(0).get("ruolo").asString()).isEqualTo("FORNITORE");
+
+        String estraneo = registra("caso20-estraneo");
+        assertThat(get("/api/incarichi/miei", estraneo).json()).isEmpty();
+        assertThat(get("/api/incarichi/miei", null).stato()).isEqualTo(401);
+    }
+
+    @Test
+    void mediaENumeroRecensioniDelFornitore() {
+        Scenario s = scenario("caso21");
+        long profiloId = jdbc.queryForObject(
+                "select profilo_fornitore_id from incarichi where id = ?", Long.class, s.incaricoId());
+        String percorso = "/api/fornitore/" + profiloId + "/recensioni";
+
+        // nessuna recensione: media 0, elenco vuoto
+        JsonNode vuoto = get(percorso, s.cliente()).json();
+        assertThat(vuoto.get("numero").asInt()).isZero();
+        assertThat(vuoto.get("media").asDouble()).isZero();
+
+        completa(s);
+        post("/api/incarichi/" + s.incaricoId() + "/recensione", "{\"voto\":4,\"commento\":\"Bene\"}", s.cliente());
+
+        // stesso fornitore, secondo lavoro con un altro cliente e voto 5
+        Scenario secondo = scenarioConFornitore("caso21-bis", s.fornitore());
+        completa(secondo);
+        post("/api/incarichi/" + secondo.incaricoId() + "/recensione", "{\"voto\":5}", secondo.cliente());
+
+        Risposta risposta = get(percorso, s.cliente());
+        assertThat(risposta.stato()).isEqualTo(200);
+        assertThat(risposta.json().get("numero").asInt()).isEqualTo(2);
+        assertThat(risposta.json().get("media").asDouble()).isEqualTo(4.5);
+        assertThat(risposta.json().get("recensioni").size()).isEqualTo(2);
+        assertThat(risposta.corpo()).doesNotContain("password", "email", "hash");
+
+        assertThat(get("/api/fornitore/999999/recensioni", s.cliente()).stato()).isEqualTo(404);
+        assertThat(get(percorso, null).stato()).isEqualTo(401);
+    }
+
     // ---- scenario e utilita' ----
 
     private record Scenario(String cliente, String fornitore, long richiestaId, long candidaturaId, long incaricoId) {}
@@ -295,8 +401,12 @@ class FlussoCompletoTest {
 
     /** Cliente con richiesta, fornitore approvato candidato e gia' selezionato: incarico ASSEGNATO. */
     private Scenario scenario(String nome) {
+        return scenarioConFornitore(nome, registraFornitoreApprovato(nome + "-fornitore"));
+    }
+
+    /** Come scenario(), ma riusando un fornitore gia' esistente. */
+    private Scenario scenarioConFornitore(String nome, String fornitore) {
         String cliente = registra(nome + "-cliente");
-        String fornitore = registraFornitoreApprovato(nome + "-fornitore");
 
         long categoriaId = get("/api/categorie", cliente).json().get(0).get("id").asLong();
         long richiestaId = idDi(post(
