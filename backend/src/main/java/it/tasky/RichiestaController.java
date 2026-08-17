@@ -24,14 +24,17 @@ public class RichiestaController {
 
     private final RichiestaServizioRepository richieste;
     private final CategoriaServizioRepository categorie;
+    private final IncaricoRepository incarichi;
     private final UtenteCorrente utenteCorrente;
 
     public RichiestaController(
             RichiestaServizioRepository richieste,
             CategoriaServizioRepository categorie,
+            IncaricoRepository incarichi,
             UtenteCorrente utenteCorrente) {
         this.richieste = richieste;
         this.categorie = categorie;
+        this.incarichi = incarichi;
         this.utenteCorrente = utenteCorrente;
     }
 
@@ -95,10 +98,28 @@ public class RichiestaController {
     }
 
     @GetMapping("/{id}")
-    public RispostaRichiesta dettaglio(@PathVariable Long id) {
-        return richieste
+    public RispostaRichiesta dettaglio(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        RichiestaServizio richiesta = richieste
                 .findById(id)
-                .map(RispostaRichiesta::da)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
+
+        // una richiesta non piu' aperta esiste solo per chi la sta portando avanti
+        if (richiesta.getStato() != StatoRichiesta.APERTA
+                && !riguarda(richiesta, utenteCorrente.da(token).getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata");
+        }
+        return RispostaRichiesta.da(richiesta);
+    }
+
+    private boolean riguarda(RichiestaServizio richiesta, Long utenteId) {
+        if (richiesta.getCliente().getId().equals(utenteId)) {
+            return true;
+        }
+        return incarichi.findByRichiestaId(richiesta.getId())
+                .map(incarico -> incarico.getProfiloFornitore()
+                        .getUtente()
+                        .getId()
+                        .equals(utenteId))
+                .orElse(false);
     }
 }
