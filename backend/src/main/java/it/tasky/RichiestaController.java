@@ -24,15 +24,15 @@ public class RichiestaController {
 
     private final RichiestaServizioRepository richieste;
     private final CategoriaServizioRepository categorie;
-    private final UtenteRepository utenti;
+    private final UtenteCorrente utenteCorrente;
 
     public RichiestaController(
             RichiestaServizioRepository richieste,
             CategoriaServizioRepository categorie,
-            UtenteRepository utenti) {
+            UtenteCorrente utenteCorrente) {
         this.richieste = richieste;
         this.categorie = categorie;
-        this.utenti = utenti;
+        this.utenteCorrente = utenteCorrente;
     }
 
     public record RichiestaNuova(
@@ -77,7 +77,7 @@ public class RichiestaController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria non trovata"));
 
         RichiestaServizio richiesta = new RichiestaServizio();
-        richiesta.setCliente(utenteAutenticato(token));
+        richiesta.setCliente(utenteCorrente.da(token));
         richiesta.setCategoria(categoria);
         richiesta.setTitolo(nuova.titolo());
         richiesta.setDescrizione(nuova.descrizione());
@@ -100,10 +100,5 @@ public class RichiestaController {
                 .findById(id)
                 .map(RispostaRichiesta::da)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
-    }
-
-    private Utente utenteAutenticato(Jwt token) {
-        return utenti.findByEmail(token.getSubject())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utente non trovato"));
     }
 }
