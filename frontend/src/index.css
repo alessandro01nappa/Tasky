@@ -1,7 +1,24 @@
 @import "tailwindcss";
 
-/* colori espliciti: senza questi le pagine sparirebbero in dark mode */
+/* colori e ombre del design */
+@theme {
+  --color-crema: #fcf7f2;
+  --color-inchiostro: #2b2622;
+  --color-fumo: #6b6058;
+  --color-bordo: #e9ded4;
+  --color-corallo: #f67c5f;
+  --color-pesca: #fde6db;
+  --color-sabbia: #f8f2ec;
+  --color-miele: #fdf2d9;
+  --color-verde-chiaro: #e4f3e9;
+  --color-verde: #7aad91;
+
+  --shadow-morbida: 0 10px 24px 0 rgba(90, 65, 47, 0.08);
+  --shadow-corallo: 0 12px 28px 0 rgba(217, 88, 65, 0.18);
+}
+
 body {
-  background-color: white;
-  color: black;
+  background-color: var(--color-crema);
+  color: var(--color-inchiostro);
+  font-family: "Plus Jakarta Sans", sans-serif;
 }
