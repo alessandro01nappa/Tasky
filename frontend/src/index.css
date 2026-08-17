@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* colori espliciti: senza questi le pagine sparirebbero in dark mode */
+body {
+  background-color: white;
+  color: black;
+}
