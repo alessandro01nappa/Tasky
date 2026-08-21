@@ -1,6 +1,7 @@
 import { ArrowLeft, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import Pagina from "../componenti/Pagina";
 import {
   cambiaStatoIncarico,
   creaRecensione,
@@ -77,7 +78,7 @@ export default function DettaglioIncarico() {
   const sonoIlLavoratore = dati.ruolo === "FORNITORE";
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-12">
+    <Pagina>
       <Link to="/profilo" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
         <ArrowLeft className="size-4" strokeWidth={2.25} />
         Torna al profilo
@@ -170,6 +171,6 @@ export default function DettaglioIncarico() {
       )}
 
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
-    </div>
+    </Pagina>
   );
 }

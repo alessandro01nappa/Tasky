@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import BarraNavigazione from "../componenti/BarraNavigazione";
+import Pagina from "../componenti/Pagina";
 import CardLavoratore from "../componenti/CardLavoratore";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import { elencoLavoratori, type Lavoratore, type TipoLavoratore } from "../lib/api";
@@ -41,7 +42,7 @@ export default function ElencoProfessionisti() {
   }, [lavoratori, tipo, cerca, perRecensioni]);
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-32">
+    <Pagina larga>
       <h1 className="text-3xl font-bold">Esperti in zona</h1>
       <p className="mt-1 text-sm text-fumo">
         {caricato
@@ -49,7 +50,7 @@ export default function ElencoProfessionisti() {
           : "Caricamento…"}
       </p>
 
-      <div className="mt-3.5 flex h-12 items-center gap-2 rounded-3xl border border-bordo bg-white px-4">
+      <div className="mt-3.5 flex h-12 items-center gap-2 rounded-3xl border border-bordo bg-white px-4 md:h-14">
         <Search className="size-5 shrink-0 text-fumo" strokeWidth={1.75} />
         <input
           value={cerca}
@@ -86,7 +87,7 @@ export default function ElencoProfessionisti() {
         </button>
       </div>
 
-      <div className="mt-3.5 flex flex-col gap-3.5">
+      <div className="mt-3.5 flex flex-col gap-3.5 md:grid md:grid-cols-2">
         {visibili.map((l) => (
           <CardLavoratore key={l.id} lavoratore={l} />
         ))}
@@ -105,6 +106,6 @@ export default function ElencoProfessionisti() {
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
 
       <BarraNavigazione />
-    </div>
+    </Pagina>
   );
 }

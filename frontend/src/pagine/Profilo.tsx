@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
+import Pagina from "../componenti/Pagina";
 import {
   io,
   mieCandidature,
@@ -42,7 +43,7 @@ export default function Profilo() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-32">
+    <Pagina>
       <h1 className="text-3xl font-bold">Profilo</h1>
       <p className="mt-1 text-sm font-medium text-fumo">{emailUtente || "…"}</p>
 
@@ -156,6 +157,6 @@ export default function Profilo() {
       </button>
 
       <BarraNavigazione />
-    </div>
+    </Pagina>
   );
 }

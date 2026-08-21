@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
+import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import {
   accettaRichiesta,
@@ -48,7 +49,7 @@ export default function DashboardLavoratore() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-32">
+    <Pagina>
       <h1 className="text-3xl font-bold">Dashboard</h1>
       <p className="mt-1 text-sm font-medium text-fumo">
         {profilo ? profilo.zonaOperativa : "Il tuo lavoro"}
@@ -158,6 +159,6 @@ export default function DashboardLavoratore() {
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
 
       <BarraNavigazione />
-    </div>
+    </Pagina>
   );
 }

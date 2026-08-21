@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
+import Pagina from "../componenti/Pagina";
 import CardRichiesta from "../componenti/CardRichiesta";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import { mieRichieste, type Richiesta } from "../lib/api";
@@ -19,7 +20,7 @@ export default function MieRichieste() {
   }, []);
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-32">
+    <Pagina>
       <h1 className="text-3xl font-bold">Le mie richieste</h1>
       <p className="mt-1 text-sm font-medium text-fumo">Quelle che hai pubblicato tu</p>
 
@@ -49,6 +50,6 @@ export default function MieRichieste() {
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
 
       <BarraNavigazione />
-    </div>
+    </Pagina>
   );
 }

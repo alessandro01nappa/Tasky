@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RiquadroInfo from "../componenti/RiquadroInfo";
+import Pagina from "../componenti/Pagina";
 import {
   aggiornaProfiloFornitore,
   categorie,
@@ -78,7 +79,7 @@ export default function DiventaLavoratore() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-12">
+    <Pagina>
       <h1 className="text-3xl font-bold">{modifica ? "Il tuo profilo lavoratore" : "Diventa lavoratore"}</h1>
       <p className="mt-2 text-base text-fumo">
         {modifica
@@ -205,6 +206,6 @@ export default function DiventaLavoratore() {
           </RiquadroInfo>
         </div>
       )}
-    </div>
+    </Pagina>
   );
 }

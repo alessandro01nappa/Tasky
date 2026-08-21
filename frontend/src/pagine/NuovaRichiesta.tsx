@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import { categorie, creaRichiesta, elencoLavoratori, type Categoria, type Lavoratore } from "../lib/api";
 
@@ -69,7 +70,7 @@ export default function NuovaRichiesta() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-12">
+    <Pagina>
       <h1 className="text-3xl font-bold">{prenotato ? "Prenota" : "Crea un annuncio"}</h1>
       <p className="mt-2 text-base text-fumo">
         {prenotato
@@ -197,6 +198,6 @@ export default function NuovaRichiesta() {
 
         {errore && <p className="text-sm text-red-600">{errore}</p>}
       </form>
-    </div>
+    </Pagina>
   );
 }

@@ -2,6 +2,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import RiquadroInfo from "../componenti/RiquadroInfo";
+import Pagina from "../componenti/Pagina";
 import { useProfiloLavoratore } from "../lib/lavoratore";
 import {
   candidati,
@@ -83,7 +84,7 @@ export default function DettaglioRichiesta() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-12">
+    <Pagina>
       <Link to="/" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
         <ArrowLeft className="size-4" strokeWidth={2.25} />
         Torna a Esplora
@@ -228,6 +229,6 @@ export default function DettaglioRichiesta() {
       )}
 
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
-    </div>
+    </Pagina>
   );
 }
