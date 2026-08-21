@@ -44,7 +44,8 @@ public class FornitoreController {
             @NotBlank String descrizione,
             @NotBlank String zonaOperativa,
             List<Long> categorieIds,
-            TipoLavoratore tipo) {}
+            TipoLavoratore tipo,
+            BigDecimal tariffaOraria) {}
 
     public record RispostaFornitore(
             Long id,
@@ -52,6 +53,7 @@ public class FornitoreController {
             String zonaOperativa,
             StatoFornitore stato,
             TipoLavoratore tipo,
+            BigDecimal tariffaOraria,
             List<String> categorie,
             LocalDateTime dataCreazione,
             LocalDateTime dataApprovazione) {
@@ -63,6 +65,7 @@ public class FornitoreController {
                     profilo.getZonaOperativa(),
                     profilo.getStato(),
                     profilo.getTipo(),
+                    profilo.getTariffaOraria(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
                             .toList(),
@@ -103,6 +106,7 @@ public class FornitoreController {
             String descrizione,
             String zonaOperativa,
             TipoLavoratore tipo,
+            BigDecimal tariffaOraria,
             List<String> categorie,
             double media,
             int numeroRecensioni) {}
@@ -155,6 +159,7 @@ public class FornitoreController {
                             profilo.getDescrizione(),
                             profilo.getZonaOperativa(),
                             profilo.getTipo(),
+                            profilo.getTariffaOraria(),
                             profilo.getCategorie().stream()
                                     .map(CategoriaServizio::getNome)
                                     .toList(),
@@ -181,6 +186,7 @@ public class FornitoreController {
         profilo.setDescrizione(dati.descrizione());
         profilo.setZonaOperativa(dati.zonaOperativa());
         profilo.setTipo(dati.tipo() == null ? TipoLavoratore.PROFESSIONISTA : dati.tipo());
+        profilo.setTariffaOraria(dati.tariffaOraria());
         profilo.getCategorie().clear();
         profilo.getCategorie().addAll(categorieRichieste(dati.categorieIds()));
     }

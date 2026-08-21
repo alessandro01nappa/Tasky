@@ -48,6 +48,10 @@ public class RichiestaServizio {
     @Column(nullable = false, length = 20)
     private StatoRichiesta stato = StatoRichiesta.APERTA;
 
+    /** Se valorizzato la richiesta è una prenotazione diretta: la vede solo questo lavoratore. */
+    @ManyToOne
+    private ProfiloFornitore fornitoreRichiesto;
+
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
     public Long getId() {
@@ -116,6 +120,14 @@ public class RichiestaServizio {
 
     public void setStato(StatoRichiesta stato) {
         this.stato = stato;
+    }
+
+    public ProfiloFornitore getFornitoreRichiesto() {
+        return fornitoreRichiesto;
+    }
+
+    public void setFornitoreRichiesto(ProfiloFornitore fornitoreRichiesto) {
+        this.fornitoreRichiesto = fornitoreRichiesto;
     }
 
     public LocalDateTime getDataCreazione() {

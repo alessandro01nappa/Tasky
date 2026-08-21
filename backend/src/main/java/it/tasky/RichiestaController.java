@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,21 +26,25 @@ public class RichiestaController {
     private final RichiestaServizioRepository richieste;
     private final CategoriaServizioRepository categorie;
     private final IncaricoRepository incarichi;
+    private final ProfiloFornitoreRepository profili;
     private final UtenteCorrente utenteCorrente;
 
     public RichiestaController(
             RichiestaServizioRepository richieste,
             CategoriaServizioRepository categorie,
             IncaricoRepository incarichi,
+            ProfiloFornitoreRepository profili,
             UtenteCorrente utenteCorrente) {
         this.richieste = richieste;
         this.categorie = categorie;
         this.incarichi = incarichi;
+        this.profili = profili;
         this.utenteCorrente = utenteCorrente;
     }
 
     public record RichiestaNuova(
             @NotNull Long categoriaId,
+            Long fornitoreId,
             @NotBlank String titolo,
             @NotBlank String descrizione,
             @NotBlank String citta,
@@ -56,6 +61,7 @@ public class RichiestaController {
             StatoRichiesta stato,
             String categoria,
             String cliente,
+            String fornitoreRichiesto,
             LocalDateTime dataCreazione) {
 
         static RispostaRichiesta da(RichiestaServizio richiesta) {
@@ -69,6 +75,9 @@ public class RichiestaController {
                     richiesta.getStato(),
                     richiesta.getCategoria().getNome(),
                     richiesta.getCliente().getNomeCompleto(),
+                    richiesta.getFornitoreRichiesto() == null
+                            ? null
+                            : richiesta.getFornitoreRichiesto().getUtente().getNomeCompleto(),
                     richiesta.getDataCreazione());
         }
     }
@@ -79,8 +88,12 @@ public class RichiestaController {
                 .findById(nuova.categoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria non trovata"));
 
+        Utente cliente = utenteCorrente.da(token);
         RichiestaServizio richiesta = new RichiestaServizio();
-        richiesta.setCliente(utenteCorrente.da(token));
+        richiesta.setCliente(cliente);
+        if (nuova.fornitoreId() != null) {
+            richiesta.setFornitoreRichiesto(lavoratorePrenotabile(nuova.fornitoreId(), cliente));
+        }
         richiesta.setCategoria(categoria);
         richiesta.setTitolo(nuova.titolo());
         richiesta.setDescrizione(nuova.descrizione());
@@ -92,9 +105,77 @@ public class RichiestaController {
 
     @GetMapping
     public List<RispostaRichiesta> aperte() {
-        return richieste.findByStato(StatoRichiesta.APERTA).stream()
+        return richieste.findByStatoAndFornitoreRichiestoIsNull(StatoRichiesta.APERTA).stream()
                 .map(RispostaRichiesta::da)
                 .toList();
+    }
+
+    /** Le prenotazioni dirette ancora da accettare, viste dal lavoratore. */
+    @GetMapping("/dirette")
+    public List<RispostaRichiesta> dirette(@AuthenticationPrincipal Jwt token) {
+        ProfiloFornitore profilo = profiloMio(token);
+        return richieste.findByFornitoreRichiestoIdAndStato(profilo.getId(), StatoRichiesta.APERTA).stream()
+                .map(RispostaRichiesta::da)
+                .toList();
+    }
+
+    @PostMapping("/{id}/accetta")
+    @Transactional
+    public RispostaRichiesta accetta(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        RichiestaServizio richiesta = prenotazioneDiretta(id, token);
+
+        Incarico incarico = new Incarico();
+        incarico.setRichiesta(richiesta);
+        incarico.setProfiloFornitore(richiesta.getFornitoreRichiesto());
+        // non c'è un'offerta: il prezzo concordato è il budget indicato dal cliente
+        incarico.setPrezzoConcordato(richiesta.getBudget());
+        incarichi.save(incarico);
+
+        richiesta.setStato(StatoRichiesta.ASSEGNATA);
+        return RispostaRichiesta.da(richieste.save(richiesta));
+    }
+
+    /** Rifiutare non cancella la richiesta: la rende pubblica, così altri possono candidarsi. */
+    @PostMapping("/{id}/rifiuta")
+    @Transactional
+    public RispostaRichiesta rifiuta(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        RichiestaServizio richiesta = prenotazioneDiretta(id, token);
+        richiesta.setFornitoreRichiesto(null);
+        return RispostaRichiesta.da(richieste.save(richiesta));
+    }
+
+    private ProfiloFornitore lavoratorePrenotabile(Long fornitoreId, Utente cliente) {
+        ProfiloFornitore profilo = profili
+                .findById(fornitoreId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lavoratore non trovato"));
+        if (profilo.getStato() != StatoFornitore.APPROVATO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lavoratore non approvato");
+        }
+        if (profilo.getUtente().getId().equals(cliente.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Non puoi prenotare te stesso");
+        }
+        return profilo;
+    }
+
+    private ProfiloFornitore profiloMio(Jwt token) {
+        return profili
+                .findByUtenteId(utenteCorrente.da(token).getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Non hai un profilo fornitore"));
+    }
+
+    private RichiestaServizio prenotazioneDiretta(Long id, Jwt token) {
+        RichiestaServizio richiesta = richieste
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
+        ProfiloFornitore profilo = profiloMio(token);
+        if (richiesta.getFornitoreRichiesto() == null
+                || !richiesta.getFornitoreRichiesto().getId().equals(profilo.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non è una prenotazione per te");
+        }
+        if (richiesta.getStato() != StatoRichiesta.APERTA) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La richiesta non è aperta");
+        }
+        return richiesta;
     }
 
     @GetMapping("/mie")

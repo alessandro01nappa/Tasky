@@ -1,6 +1,7 @@
 package it.tasky;
 
 import jakarta.persistence.Column;
+import java.math.BigDecimal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -41,6 +42,9 @@ public class ProfiloFornitore {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private TipoLavoratore tipo = TipoLavoratore.PROFESSIONISTA;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal tariffaOraria;
 
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
@@ -95,6 +99,14 @@ public class ProfiloFornitore {
 
     public void setTipo(TipoLavoratore tipo) {
         this.tipo = tipo;
+    }
+
+    public BigDecimal getTariffaOraria() {
+        return tariffaOraria;
+    }
+
+    public void setTariffaOraria(BigDecimal tariffaOraria) {
+        this.tariffaOraria = tariffaOraria;
     }
 
     public LocalDateTime getDataCreazione() {
