@@ -45,6 +45,13 @@ export default function Esplora() {
             </p>
           </Link>
 
+          <Link
+            to="/professionisti"
+            className="mt-3.5 flex h-12 items-center justify-center rounded-2xl border border-bordo bg-white text-sm font-semibold shadow-morbida"
+          >
+            Sfoglia gli esperti in zona
+          </Link>
+
           <h2 className="mt-8 text-lg font-semibold">Categorie</h2>
           <div className="mt-3 grid grid-cols-4 gap-4">
             {elencoCategorie.map((categoria, indice) => {

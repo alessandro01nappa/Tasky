@@ -6,6 +6,7 @@ import Accesso from "./pagine/Accesso";
 import DashboardLavoratore from "./pagine/DashboardLavoratore";
 import DettaglioIncarico from "./pagine/DettaglioIncarico";
 import DettaglioRichiesta from "./pagine/DettaglioRichiesta";
+import ElencoProfessionisti from "./pagine/ElencoProfessionisti";
 import Esplora from "./pagine/Esplora";
 import MieRichieste from "./pagine/MieRichieste";
 import NuovaRichiesta from "./pagine/NuovaRichiesta";
@@ -43,6 +44,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <RottaProtetta>
               <DiventaLavoratore />
+            </RottaProtetta>
+          }
+        />
+        <Route
+          path="/professionisti"
+          element={
+            <RottaProtetta>
+              <ElencoProfessionisti />
             </RottaProtetta>
           }
         />
