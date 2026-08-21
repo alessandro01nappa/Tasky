@@ -12,6 +12,7 @@ import NuovaRichiesta from "./pagine/NuovaRichiesta";
 import DiventaLavoratore from "./pagine/DiventaLavoratore";
 import Permessi from "./pagine/Permessi";
 import Profilo from "./pagine/Profilo";
+import ProfiloLavoratore from "./pagine/ProfiloLavoratore";
 import Registrazione from "./pagine/Registrazione";
 import "./index.css";
 
@@ -42,6 +43,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <RottaProtetta>
               <DiventaLavoratore />
+            </RottaProtetta>
+          }
+        />
+        <Route
+          path="/lavoratori/:id"
+          element={
+            <RottaProtetta>
+              <ProfiloLavoratore />
             </RottaProtetta>
           }
         />

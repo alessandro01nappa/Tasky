@@ -69,6 +69,17 @@ export type Fornitore = {
   dataApprovazione: string | null;
 };
 
+export type Lavoratore = {
+  id: number;
+  nome: string;
+  descrizione: string;
+  zonaOperativa: string;
+  tipo: TipoLavoratore;
+  categorie: string[];
+  media: number;
+  numeroRecensioni: number;
+};
+
 export type Recensione = {
   id: number;
   voto: number;
@@ -177,6 +188,20 @@ export function candidati(richiestaId: number, dati: { messaggio: string; prezzo
 
 export function mieCandidature() {
   return chiama<MiaCandidatura[]>("/api/fornitore/candidature");
+}
+
+export function elencoLavoratori() {
+  return chiama<Lavoratore[]>("/api/fornitore/elenco");
+}
+
+export type RecensioniLavoratore = {
+  media: number;
+  numero: number;
+  recensioni: { voto: number; commento: string | null; dataCreazione: string }[];
+};
+
+export function recensioniLavoratore(id: number) {
+  return chiama<RecensioniLavoratore>(`/api/fornitore/${id}/recensioni`);
 }
 
 export function mioProfiloFornitore() {
