@@ -1,9 +1,8 @@
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import RiquadroInfo from "../componenti/RiquadroInfo";
 import Pagina from "../componenti/Pagina";
-import { useProfiloLavoratore } from "../lib/lavoratore";
+import RiquadroInfo from "../componenti/RiquadroInfo";
 import {
   candidati,
   candidatureRicevute,
@@ -13,13 +12,30 @@ import {
   type Candidatura,
   type Richiesta,
 } from "../lib/api";
+import { useProfiloLavoratore } from "../lib/lavoratore";
+
+const COLORI_STATO: Record<string, string> = {
+  APERTA: "bg-verde-chiaro text-verde",
+  ASSEGNATA: "bg-pesca text-corallo",
+  COMPLETATA: "bg-sabbia text-fumo",
+  ANNULLATA: "bg-sabbia text-fumo",
+};
+
+function iniziali(nome: string) {
+  return nome
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
 
 export default function DettaglioRichiesta() {
   const { id } = useParams();
   const navigate = useNavigate();
   const idRichiesta = Number(id);
-
   const profiloLavoratore = useProfiloLavoratore();
+
   const [dati, setDati] = useState<Richiesta | null>(null);
   const [mia, setMia] = useState(false);
   const [candidature, setCandidature] = useState<Candidatura[]>([]);
@@ -47,11 +63,8 @@ export default function DettaglioRichiesta() {
     setErrore("");
     setInCorso(true);
     try {
-      await candidati(idRichiesta, {
-        messaggio,
-        prezzoOfferto: prezzo ? Number(prezzo) : null,
-      });
-      setEsito("Candidatura inviata. La trovi nel tuo profilo.");
+      await candidati(idRichiesta, { messaggio, prezzoOfferto: prezzo ? Number(prezzo) : null });
+      setEsito("Candidatura inviata. La trovi nella tua dashboard.");
       setMessaggio("");
       setPrezzo("");
     } catch (e) {
@@ -73,15 +86,21 @@ export default function DettaglioRichiesta() {
 
   if (!dati) {
     return (
-      <div className="mx-auto min-h-screen max-w-md px-6 pt-7">
+      <Pagina>
         <Link to="/" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
           <ArrowLeft className="size-4" strokeWidth={2.25} />
           Torna a Esplora
         </Link>
         {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
-      </div>
+      </Pagina>
     );
   }
+
+  const dataPubblicazione = new Date(dati.dataCreazione).toLocaleDateString("it-IT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <Pagina>
@@ -91,50 +110,117 @@ export default function DettaglioRichiesta() {
       </Link>
 
       <h1 className="mt-4 text-3xl font-bold">{dati.titolo}</h1>
-      <p className="mt-1 text-sm font-medium text-fumo">
-        {dati.categoria} • {dati.citta} • {dati.stato.toLowerCase()}
+      <p className="mt-2.5 text-sm text-fumo">
+        Richiesta pubblicata il {dataPubblicazione} • {dati.citta}
       </p>
 
-      <div className="mt-5 rounded-3xl border border-bordo bg-white p-5">
-        <p className="text-sm">{dati.descrizione}</p>
-        <p className="mt-3 text-sm text-fumo">
-          Pubblicata da {dati.cliente}
-          {dati.budget != null && ` • budget ${dati.budget} €`}
-          {dati.dataPreferita && ` • preferibilmente il ${dati.dataPreferita}`}
-        </p>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        <span
+          className={`rounded-full px-2.5 py-1.5 text-xs font-medium ${COLORI_STATO[dati.stato]}`}
+        >
+          {dati.stato.charAt(0) + dati.stato.slice(1).toLowerCase()}
+        </span>
+        {mia && (
+          <span className="rounded-full bg-pesca px-2.5 py-1.5 text-xs font-medium text-corallo">
+            {candidature.length === 1 ? "1 candidatura" : `${candidature.length} candidature`}
+          </span>
+        )}
+        {dati.fornitoreRichiesto && (
+          <span className="rounded-full bg-miele px-2.5 py-1.5 text-xs font-medium text-ambra">
+            Prenotazione per {dati.fornitoreRichiesto}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-5 flex gap-2">
+        <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
+          <p className="text-base font-semibold">
+            {dati.budget != null ? `${dati.budget} €` : "Da concordare"}
+          </p>
+          <p className="mt-1 text-xs text-fumo">Budget</p>
+        </div>
+        <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
+          <p className="text-base font-semibold">{dati.categoria}</p>
+          <p className="mt-1 text-xs text-fumo">Categoria</p>
+        </div>
+        <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
+          <p className="text-base font-semibold">
+            {dati.dataPreferita
+              ? new Date(dati.dataPreferita).toLocaleDateString("it-IT", {
+                  day: "numeric",
+                  month: "short",
+                })
+              : "Libera"}
+          </p>
+          <p className="mt-1 text-xs text-fumo">Data</p>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-3xl border border-bordo bg-white p-4">
+        <p className="text-lg font-semibold">Descrizione</p>
+        <p className="mt-2.5 text-sm text-fumo">{dati.descrizione}</p>
+        <p className="mt-2.5 text-sm text-fumo">Pubblicata da {dati.cliente}</p>
       </div>
 
       {mia && (
         <>
-          <h2 className="mt-8 text-lg font-semibold">
-            Candidature ricevute
-            <span className="ml-2 text-sm font-medium text-fumo">{candidature.length}</span>
-          </h2>
-
+          <h2 className="mt-8 text-lg font-semibold">Candidature ricevute</h2>
           <div className="mt-3 flex flex-col gap-3">
             {candidature.map((c) => (
-              <div key={c.id} className="rounded-3xl border border-bordo bg-white p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-base font-semibold">{c.fornitore}</p>
-                  <span className="shrink-0 rounded-full bg-sabbia px-3 py-1 text-xs font-semibold text-fumo">
-                    {c.stato.toLowerCase().replace("_", " ")}
-                  </span>
+              <div key={c.id} className="rounded-3xl border border-bordo bg-white p-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span
+                      className={`flex size-11 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                        c.tipo === "PROFESSIONISTA"
+                          ? "bg-verde-chiaro text-verde"
+                          : "bg-pesca text-corallo"
+                      }`}
+                    >
+                      {iniziali(c.fornitore)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{c.fornitore}</p>
+                      <span
+                        className={`mt-1 inline-block rounded-full px-2.5 py-1.5 text-xs font-medium ${
+                          c.tipo === "PROFESSIONISTA"
+                            ? "bg-verde-chiaro text-verde"
+                            : "bg-pesca text-corallo"
+                        }`}
+                      >
+                        {c.tipo === "PROFESSIONISTA" ? "Pro verificato" : "Top appassionato"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {c.prezzoOfferto != null && (
+                      <p className="font-semibold">€{c.prezzoOfferto}</p>
+                    )}
+                    <p className="text-xs text-fumo">{c.zonaOperativa}</p>
+                  </div>
                 </div>
-                <p className="mt-1.5 text-sm text-fumo">
-                  {c.zonaOperativa}
-                  {c.prezzoOfferto != null && ` • ${c.prezzoOfferto} €`}
-                </p>
-                {c.messaggio && <p className="mt-2 text-sm">{c.messaggio}</p>}
 
-                {dati.stato === "APERTA" && (
-                  <button
-                    type="button"
-                    onClick={() => scegli(c.id)}
-                    className="mt-4 h-12 w-full rounded-2xl bg-corallo text-sm font-semibold text-white"
+                {c.messaggio && <p className="mt-3 text-sm text-fumo">{c.messaggio}</p>}
+
+                <div className="mt-3 flex gap-2.5">
+                  <Link
+                    to={`/lavoratori/${c.fornitoreId}`}
+                    className="flex h-10 w-28 items-center justify-center rounded-2xl border border-bordo text-sm font-semibold"
                   >
-                    Scegli questo lavoratore
-                  </button>
-                )}
+                    Profilo
+                  </Link>
+                  {dati.stato === "APERTA" && (
+                    <button
+                      type="button"
+                      onClick={() => scegli(c.id)}
+                      className={`h-10 flex-1 rounded-2xl text-sm font-semibold text-white ${
+                        c.tipo === "PROFESSIONISTA" ? "bg-verde" : "bg-corallo"
+                      }`}
+                    >
+                      Scegli
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

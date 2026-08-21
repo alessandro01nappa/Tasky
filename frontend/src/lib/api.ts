@@ -3,6 +3,8 @@ import { cancellaToken, leggiToken } from "./sessione";
 // I testi mostrati all'utente dicono "lavoratore", come il design.
 // Codice, API e database dicono "fornitore", come il backend.
 
+export type TipoLavoratore = "PROFESSIONISTA" | "HOBBISTA";
+
 export type Categoria = {
   id: number;
   nome: string;
@@ -24,7 +26,9 @@ export type Richiesta = {
 
 export type Candidatura = {
   id: number;
+  fornitoreId: number;
   fornitore: string;
+  tipo: TipoLavoratore;
   zonaOperativa: string;
   messaggio: string | null;
   prezzoOfferto: number | null;
@@ -56,8 +60,6 @@ export type Incarico = {
   dataCreazione: string;
   dataCompletamento: string | null;
 };
-
-export type TipoLavoratore = "PROFESSIONISTA" | "HOBBISTA";
 
 export type Fornitore = {
   id: number;

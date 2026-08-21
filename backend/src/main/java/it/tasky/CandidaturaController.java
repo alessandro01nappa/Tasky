@@ -39,7 +39,9 @@ public class CandidaturaController {
 
     public record RispostaCandidatura(
             Long id,
+            Long fornitoreId,
             String fornitore,
+            TipoLavoratore tipo,
             String zonaOperativa,
             String messaggio,
             BigDecimal prezzoOfferto,
@@ -50,7 +52,9 @@ public class CandidaturaController {
             ProfiloFornitore profilo = candidatura.getProfiloFornitore();
             return new RispostaCandidatura(
                     candidatura.getId(),
+                    profilo.getId(),
                     profilo.getUtente().getNomeCompleto(),
+                    profilo.getTipo(),
                     profilo.getZonaOperativa(),
                     candidatura.getMessaggio(),
                     candidatura.getPrezzoOfferto(),
