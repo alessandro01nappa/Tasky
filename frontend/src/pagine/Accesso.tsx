@@ -1,4 +1,5 @@
 import { LogIn, UserPlus } from "lucide-react";
+import Logo from "../componenti/Logo";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../lib/api";
@@ -34,11 +35,11 @@ export default function Accesso() {
 
       <div className="relative mx-auto flex max-w-md flex-col gap-4 px-6 pt-12">
         <div className="flex items-center gap-3">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-corallo text-2xl font-bold text-white">
-            H
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-corallo">
+            <Logo variante="bianco" className="size-7" />
           </div>
           <div>
-            <p className="text-lg font-semibold">MarketPlace Locale</p>
+            <p className="text-lg font-semibold">Tasky</p>
             <p className="text-sm text-fumo">Servizi di fiducia nel tuo quartiere</p>
           </div>
         </div>
