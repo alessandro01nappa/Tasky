@@ -58,7 +58,9 @@ export default function Profilo() {
               {STATO_LAVORATORE[profilo.stato]}
             </span>
           </div>
-          <p className="mt-1.5 text-sm text-fumo">{profilo.zonaOperativa}</p>
+          <p className="mt-1.5 text-sm text-fumo">
+            {profilo.tipo === "HOBBISTA" ? "Hobbista" : "Professionista"} • {profilo.zonaOperativa}
+          </p>
           <p className="mt-2 text-sm">{profilo.descrizione}</p>
           {profilo.categorie.length > 0 && (
             <p className="mt-2 text-sm text-fumo">{profilo.categorie.join(" • ")}</p>

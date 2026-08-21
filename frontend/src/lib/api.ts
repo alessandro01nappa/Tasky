@@ -56,11 +56,14 @@ export type Incarico = {
   dataCompletamento: string | null;
 };
 
+export type TipoLavoratore = "PROFESSIONISTA" | "HOBBISTA";
+
 export type Fornitore = {
   id: number;
   descrizione: string;
   zonaOperativa: string;
   stato: "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
+  tipo: TipoLavoratore;
   categorie: string[];
   dataCreazione: string;
   dataApprovazione: string | null;
@@ -184,6 +187,7 @@ export function creaProfiloFornitore(dati: {
   descrizione: string;
   zonaOperativa: string;
   categorieIds: number[];
+  tipo: TipoLavoratore;
 }) {
   return invia<Fornitore>("/api/fornitore", "POST", dati);
 }
@@ -192,6 +196,7 @@ export function aggiornaProfiloFornitore(dati: {
   descrizione: string;
   zonaOperativa: string;
   categorieIds: number[];
+  tipo: TipoLavoratore;
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);
 }

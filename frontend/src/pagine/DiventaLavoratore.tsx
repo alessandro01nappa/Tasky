@@ -6,6 +6,7 @@ import {
   categorie,
   creaProfiloFornitore,
   type Categoria,
+  type TipoLavoratore,
 } from "../lib/api";
 import { scordaProfiloLavoratore, useProfiloLavoratore } from "../lib/lavoratore";
 
@@ -15,6 +16,7 @@ export default function DiventaLavoratore() {
   const modifica = profilo != null;
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [scelte, setScelte] = useState<number[]>([]);
+  const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
   const [descrizione, setDescrizione] = useState("");
   const [zonaOperativa, setZonaOperativa] = useState("");
   const [errore, setErrore] = useState("");
@@ -30,6 +32,7 @@ export default function DiventaLavoratore() {
     if (!profilo) return;
     setDescrizione(profilo.descrizione);
     setZonaOperativa(profilo.zonaOperativa);
+    setTipo(profilo.tipo);
   }, [profilo]);
 
   // il profilo salva i nomi delle categorie, il form lavora sugli id
@@ -51,7 +54,7 @@ export default function DiventaLavoratore() {
     setErrore("");
     setInCorso(true);
     try {
-      const dati = { descrizione, zonaOperativa, categorieIds: scelte };
+      const dati = { descrizione, zonaOperativa, categorieIds: scelte, tipo };
       if (modifica) {
         await aggiornaProfiloFornitore(dati);
       } else {
@@ -77,6 +80,31 @@ export default function DiventaLavoratore() {
 
       <form onSubmit={invia} className="mt-5 flex flex-col gap-3 rounded-3xl border border-bordo bg-white p-4">
         <p className="text-xl font-semibold">Il tuo profilo</p>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium text-fumo">Come lavori</span>
+          <div className="flex gap-2">
+            {(
+              [
+                { valore: "PROFESSIONISTA", etichetta: "Professionista" },
+                { valore: "HOBBISTA", etichetta: "Hobbista" },
+              ] as const
+            ).map((voce) => (
+              <button
+                key={voce.valore}
+                type="button"
+                onClick={() => setTipo(voce.valore)}
+                className={`h-9 rounded-full border px-4 text-sm font-semibold ${
+                  tipo === voce.valore
+                    ? "border-corallo bg-corallo text-white"
+                    : "border-bordo bg-white text-fumo"
+                }`}
+              >
+                {voce.etichetta}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="descrizione" className="text-xs font-medium text-fumo">

@@ -38,6 +38,10 @@ public class ProfiloFornitore {
     @Column(nullable = false, length = 20)
     private StatoFornitore stato = StatoFornitore.IN_ATTESA;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private TipoLavoratore tipo = TipoLavoratore.PROFESSIONISTA;
+
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
     private LocalDateTime dataApprovazione;
@@ -83,6 +87,14 @@ public class ProfiloFornitore {
 
     public void setStato(StatoFornitore stato) {
         this.stato = stato;
+    }
+
+    public TipoLavoratore getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoLavoratore tipo) {
+        this.tipo = tipo;
     }
 
     public LocalDateTime getDataCreazione() {

@@ -41,13 +41,17 @@ public class FornitoreController {
     }
 
     public record DatiFornitore(
-            @NotBlank String descrizione, @NotBlank String zonaOperativa, List<Long> categorieIds) {}
+            @NotBlank String descrizione,
+            @NotBlank String zonaOperativa,
+            List<Long> categorieIds,
+            TipoLavoratore tipo) {}
 
     public record RispostaFornitore(
             Long id,
             String descrizione,
             String zonaOperativa,
             StatoFornitore stato,
+            TipoLavoratore tipo,
             List<String> categorie,
             LocalDateTime dataCreazione,
             LocalDateTime dataApprovazione) {
@@ -58,6 +62,7 @@ public class FornitoreController {
                     profilo.getDescrizione(),
                     profilo.getZonaOperativa(),
                     profilo.getStato(),
+                    profilo.getTipo(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
                             .toList(),
@@ -90,6 +95,17 @@ public class FornitoreController {
                     candidatura.getDataCreazione());
         }
     }
+
+    /** Un lavoratore come lo vede chi cerca: conta il nome, non l'utente dietro. */
+    public record VoceElenco(
+            Long id,
+            String nome,
+            String descrizione,
+            String zonaOperativa,
+            TipoLavoratore tipo,
+            List<String> categorie,
+            double media,
+            int numeroRecensioni) {}
 
     public record VoceRecensione(int voto, String commento, LocalDateTime dataCreazione) {}
 
@@ -126,6 +142,28 @@ public class FornitoreController {
                 .toList();
     }
 
+    @GetMapping("/elenco")
+    public List<VoceElenco> elenco() {
+        return profili.findByStato(StatoFornitore.APPROVATO).stream()
+                .map(profilo -> {
+                    List<Recensione> ricevute =
+                            recensioni.findByIncaricoProfiloFornitoreId(profilo.getId());
+                    double media = ricevute.stream().mapToInt(Recensione::getVoto).average().orElse(0);
+                    return new VoceElenco(
+                            profilo.getId(),
+                            profilo.getUtente().getNomeCompleto(),
+                            profilo.getDescrizione(),
+                            profilo.getZonaOperativa(),
+                            profilo.getTipo(),
+                            profilo.getCategorie().stream()
+                                    .map(CategoriaServizio::getNome)
+                                    .toList(),
+                            Math.round(media * 10) / 10.0,
+                            ricevute.size());
+                })
+                .toList();
+    }
+
     @GetMapping("/{id}/recensioni")
     public RecensioniFornitore recensioniRicevute(@PathVariable Long id) {
         if (!profili.existsById(id)) {
@@ -142,6 +180,7 @@ public class FornitoreController {
     private void applica(DatiFornitore dati, ProfiloFornitore profilo) {
         profilo.setDescrizione(dati.descrizione());
         profilo.setZonaOperativa(dati.zonaOperativa());
+        profilo.setTipo(dati.tipo() == null ? TipoLavoratore.PROFESSIONISTA : dati.tipo());
         profilo.getCategorie().clear();
         profilo.getCategorie().addAll(categorieRichieste(dati.categorieIds()));
     }
