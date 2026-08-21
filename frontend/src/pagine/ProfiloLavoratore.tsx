@@ -26,13 +26,18 @@ export default function ProfiloLavoratore() {
         setLavoratore(trovato);
       })
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
-    recensioniLavoratore(idLavoratore).then(setRecensioni).catch(() => setRecensioni(null));
+    recensioniLavoratore(idLavoratore)
+      .then(setRecensioni)
+      .catch(() => setRecensioni(null));
   }, [idLavoratore]);
 
   if (!lavoratore) {
     return (
       <div className="mx-auto min-h-screen max-w-md px-6 pt-7">
-        <Link to="/professionisti" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
+        <Link
+          to="/professionisti"
+          className="flex items-center gap-1.5 text-sm font-semibold text-corallo"
+        >
           <ArrowLeft className="size-4" strokeWidth={2.25} />
           Indietro
         </Link>
@@ -87,17 +92,34 @@ export default function ProfiloLavoratore() {
       </div>
 
       <div className="mx-auto max-w-md px-6 pt-5 pb-12">
-        <div className="flex flex-col gap-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
-          <p className="flex items-center gap-1.5 text-lg font-semibold">
-            <Star className="size-4 text-ambra" strokeWidth={1.75} fill="currentColor" />
-            {lavoratore.numeroRecensioni > 0 ? lavoratore.media : "—"}
-          </p>
-          <p className="text-xs text-fumo">
-            {lavoratore.numeroRecensioni === 1
-              ? "1 recensione"
-              : `${lavoratore.numeroRecensioni} recensioni`}
-          </p>
+        <div className="flex gap-2.5">
+          <div className="flex flex-1 flex-col gap-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
+            <p className="flex items-center gap-1.5 text-lg font-semibold">
+              <Star className="size-4 text-ambra" strokeWidth={1.75} fill="currentColor" />
+              {lavoratore.numeroRecensioni > 0 ? lavoratore.media : "—"}
+            </p>
+            <p className="text-xs text-fumo">
+              {lavoratore.numeroRecensioni === 1
+                ? "1 recensione"
+                : `${lavoratore.numeroRecensioni} recensioni`}
+            </p>
+          </div>
+          {lavoratore.tariffaOraria != null && (
+            <div className="flex flex-1 flex-col gap-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
+              <p className="text-lg font-semibold">€{lavoratore.tariffaOraria}/h</p>
+              <p className="text-xs text-fumo">Tariffa oraria</p>
+            </div>
+          )}
         </div>
+
+        <Link
+          to={`/richieste/nuova?fornitore=${lavoratore.id}`}
+          className={`mt-5 flex h-12 items-center justify-center rounded-2xl text-sm font-semibold text-white ${
+            professionista ? "bg-verde" : "bg-corallo"
+          }`}
+        >
+          Prenota {lavoratore.nome.split(" ")[0]}
+        </Link>
 
         <h2 className="mt-5 text-lg font-semibold">Chi è {lavoratore.nome.split(" ")[0]}</h2>
         <p className="mt-3 text-sm text-fumo">{lavoratore.descrizione}</p>

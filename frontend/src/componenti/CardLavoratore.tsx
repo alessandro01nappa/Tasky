@@ -37,9 +37,12 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
           </div>
         </div>
 
-        <p className="shrink-0 text-right text-xs font-medium text-fumo">
-          {lavoratore.zonaOperativa}
-        </p>
+        <div className="shrink-0 text-right">
+          {lavoratore.tariffaOraria != null && (
+            <p className="text-base font-bold">€{lavoratore.tariffaOraria}/h</p>
+          )}
+          <p className="text-xs font-medium text-fumo">{lavoratore.zonaOperativa}</p>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -61,12 +64,22 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
 
       <p className="mt-3 line-clamp-2 text-sm text-fumo">{lavoratore.descrizione}</p>
 
-      <Link
-        to={`/lavoratori/${lavoratore.id}`}
-        className="mt-3 flex h-12 items-center justify-center rounded-2xl border border-bordo text-sm font-semibold"
-      >
-        Profilo
-      </Link>
+      <div className="mt-3 flex gap-2.5">
+        <Link
+          to={`/lavoratori/${lavoratore.id}`}
+          className="flex h-12 w-28 items-center justify-center rounded-2xl border border-bordo text-sm font-semibold"
+        >
+          Profilo
+        </Link>
+        <Link
+          to={`/richieste/nuova?fornitore=${lavoratore.id}`}
+          className={`flex h-12 flex-1 items-center justify-center rounded-2xl text-sm font-semibold text-white ${
+            professionista ? "bg-verde" : "bg-corallo"
+          }`}
+        >
+          Prenota
+        </Link>
+      </div>
     </div>
   );
 }

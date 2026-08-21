@@ -17,6 +17,7 @@ export default function DiventaLavoratore() {
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [scelte, setScelte] = useState<number[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
+  const [tariffa, setTariffa] = useState("");
   const [descrizione, setDescrizione] = useState("");
   const [zonaOperativa, setZonaOperativa] = useState("");
   const [errore, setErrore] = useState("");
@@ -33,6 +34,7 @@ export default function DiventaLavoratore() {
     setDescrizione(profilo.descrizione);
     setZonaOperativa(profilo.zonaOperativa);
     setTipo(profilo.tipo);
+    setTariffa(profilo.tariffaOraria != null ? String(profilo.tariffaOraria) : "");
   }, [profilo]);
 
   // il profilo salva i nomi delle categorie, il form lavora sugli id
@@ -54,7 +56,13 @@ export default function DiventaLavoratore() {
     setErrore("");
     setInCorso(true);
     try {
-      const dati = { descrizione, zonaOperativa, categorieIds: scelte, tipo };
+      const dati = {
+        descrizione,
+        zonaOperativa,
+        categorieIds: scelte,
+        tipo,
+        tariffaOraria: tariffa ? Number(tariffa) : null,
+      };
       if (modifica) {
         await aggiornaProfiloFornitore(dati);
       } else {
@@ -118,6 +126,21 @@ export default function DiventaLavoratore() {
             rows={4}
             placeholder="Esperienza, attrezzatura, tipo di lavori che segui."
             className="rounded-2xl border border-bordo p-4 text-sm outline-none"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="tariffa" className="text-xs font-medium text-fumo">
+            Tariffa oraria €
+          </label>
+          <input
+            id="tariffa"
+            type="number"
+            min="0"
+            value={tariffa}
+            onChange={(e) => setTariffa(e.target.value)}
+            placeholder="32"
+            className="h-11 rounded-2xl border border-bordo px-4 text-sm outline-none"
           />
         </div>
 

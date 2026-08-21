@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { categorie, creaRichiesta, type Categoria } from "../lib/api";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import RiquadroInfo from "../componenti/RiquadroInfo";
+import { categorie, creaRichiesta, elencoLavoratori, type Categoria, type Lavoratore } from "../lib/api";
 
 export default function NuovaRichiesta() {
   const navigate = useNavigate();
+  const [parametri] = useSearchParams();
+  const fornitoreId = parametri.get("fornitore");
+  const [prenotato, setPrenotato] = useState<Lavoratore | null>(null);
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [categoriaId, setCategoriaId] = useState<number | null>(null);
   const [titolo, setTitolo] = useState("");
@@ -20,6 +24,24 @@ export default function NuovaRichiesta() {
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
   }, []);
 
+  // se arrivo dal profilo di un lavoratore la richiesta è indirizzata solo a lui
+  useEffect(() => {
+    if (!fornitoreId) return;
+    elencoLavoratori()
+      .then((tutti) => {
+        const trovato = tutti.find((l) => l.id === Number(fornitoreId)) ?? null;
+        setPrenotato(trovato);
+        if (trovato && trovato.categorie.length > 0) {
+          setElencoCategorie((attuali) => {
+            const suo = attuali.find((c) => trovato.categorie.includes(c.nome));
+            if (suo) setCategoriaId(suo.id);
+            return attuali;
+          });
+        }
+      })
+      .catch(() => setPrenotato(null));
+  }, [fornitoreId]);
+
   async function invia(evento: React.FormEvent) {
     evento.preventDefault();
     if (categoriaId === null) {
@@ -31,6 +53,7 @@ export default function NuovaRichiesta() {
     try {
       const creata = await creaRichiesta({
         categoriaId,
+        ...(prenotato ? { fornitoreId: prenotato.id } : {}),
         titolo,
         descrizione,
         citta,
@@ -47,10 +70,21 @@ export default function NuovaRichiesta() {
 
   return (
     <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-12">
-      <h1 className="text-3xl font-bold">Crea un annuncio</h1>
+      <h1 className="text-3xl font-bold">{prenotato ? "Prenota" : "Crea un annuncio"}</h1>
       <p className="mt-2 text-base text-fumo">
-        Descrivi cosa ti serve: i lavoratori della zona potranno candidarsi.
+        {prenotato
+          ? `La richiesta va solo a ${prenotato.nome}, che può accettarla o rifiutarla.`
+          : "Descrivi cosa ti serve: i lavoratori della zona potranno candidarsi."}
       </p>
+
+      {prenotato && (
+        <div className="mt-5">
+          <RiquadroInfo>
+            Se {prenotato.nome.split(" ")[0]} rifiuta, la richiesta diventa pubblica e gli altri
+            lavoratori potranno candidarsi.
+          </RiquadroInfo>
+        </div>
+      )}
 
       <form onSubmit={invia} className="mt-5 flex flex-col gap-3 rounded-3xl border border-bordo bg-white p-4">
         <div className="flex flex-col gap-2">
@@ -150,7 +184,7 @@ export default function NuovaRichiesta() {
           disabled={inCorso}
           className="h-12 rounded-2xl bg-corallo text-sm font-semibold text-white"
         >
-          Pubblica richiesta
+          {prenotato ? "Invia la prenotazione" : "Pubblica richiesta"}
         </button>
 
         <button

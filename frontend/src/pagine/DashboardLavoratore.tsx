@@ -2,13 +2,23 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import RiquadroInfo from "../componenti/RiquadroInfo";
-import { mieCandidature, mieiIncarichi, type Incarico, type MiaCandidatura } from "../lib/api";
+import {
+  accettaRichiesta,
+  mieCandidature,
+  mieiIncarichi,
+  richiesteDirette,
+  rifiutaRichiesta,
+  type Incarico,
+  type MiaCandidatura,
+  type Richiesta,
+} from "../lib/api";
 import { useProfiloLavoratore } from "../lib/lavoratore";
 
 export default function DashboardLavoratore() {
   const profilo = useProfiloLavoratore();
   const [incarichi, setIncarichi] = useState<Incarico[]>([]);
   const [candidature, setCandidature] = useState<MiaCandidatura[]>([]);
+  const [dirette, setDirette] = useState<Richiesta[]>([]);
   const [errore, setErrore] = useState("");
 
   useEffect(() => {
@@ -16,10 +26,26 @@ export default function DashboardLavoratore() {
       .then((tutti) => setIncarichi(tutti.filter((i) => i.ruolo === "FORNITORE")))
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
     mieCandidature().then(setCandidature).catch(() => setCandidature([]));
+    richiesteDirette().then(setDirette).catch(() => setDirette([]));
   }, []);
 
   const inCorso = incarichi.filter((i) => i.stato !== "COMPLETATO");
   const concluse = incarichi.filter((i) => i.stato === "COMPLETATO");
+
+  async function rispondi(id: number, accetta: boolean) {
+    setErrore("");
+    try {
+      if (accetta) {
+        await accettaRichiesta(id);
+        setIncarichi(await mieiIncarichi().then((t) => t.filter((i) => i.ruolo === "FORNITORE")));
+      } else {
+        await rifiutaRichiesta(id);
+      }
+      setDirette(await richiesteDirette());
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : "Errore inatteso");
+    }
+  }
 
   return (
     <div className="mx-auto min-h-screen max-w-md px-6 pt-7 pb-32">
@@ -40,6 +66,43 @@ export default function DashboardLavoratore() {
           </div>
         ))}
       </div>
+
+      {dirette.length > 0 && (
+        <>
+          <h2 className="mt-8 text-lg font-semibold">
+            Richieste in arrivo
+            <span className="ml-2 text-sm font-medium text-fumo">{dirette.length}</span>
+          </h2>
+          <div className="mt-3 flex flex-col gap-3">
+            {dirette.map((r) => (
+              <div key={r.id} className="rounded-3xl border border-bordo bg-white p-5">
+                <p className="text-base font-semibold">{r.titolo}</p>
+                <p className="mt-1.5 text-sm text-fumo">
+                  {r.categoria} • {r.citta}
+                  {r.budget != null && ` • ${r.budget} €`}
+                </p>
+                <p className="mt-2 text-sm">{r.descrizione}</p>
+                <div className="mt-4 flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => rispondi(r.id, false)}
+                    className="h-12 w-28 rounded-2xl border border-bordo text-sm font-semibold"
+                  >
+                    Rifiuta
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => rispondi(r.id, true)}
+                    className="h-12 flex-1 rounded-2xl bg-verde text-sm font-semibold text-white"
+                  >
+                    Accetta
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <h2 className="mt-8 text-lg font-semibold">Lavori da fare</h2>
       <div className="mt-3 flex flex-col gap-3">

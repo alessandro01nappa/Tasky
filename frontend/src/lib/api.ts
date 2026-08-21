@@ -18,6 +18,7 @@ export type Richiesta = {
   stato: "APERTA" | "ASSEGNATA" | "COMPLETATA" | "ANNULLATA";
   categoria: string;
   cliente: string;
+  fornitoreRichiesto: string | null;
   dataCreazione: string;
 };
 
@@ -64,6 +65,7 @@ export type Fornitore = {
   zonaOperativa: string;
   stato: "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
   tipo: TipoLavoratore;
+  tariffaOraria: number | null;
   categorie: string[];
   dataCreazione: string;
   dataApprovazione: string | null;
@@ -75,6 +77,7 @@ export type Lavoratore = {
   descrizione: string;
   zonaOperativa: string;
   tipo: TipoLavoratore;
+  tariffaOraria: number | null;
   categorie: string[];
   media: number;
   numeroRecensioni: number;
@@ -169,6 +172,7 @@ export function richiesta(id: number) {
 
 export function creaRichiesta(dati: {
   categoriaId: number;
+  fornitoreId?: number;
   titolo: string;
   descrizione: string;
   citta: string;
@@ -176,6 +180,18 @@ export function creaRichiesta(dati: {
   dataPreferita?: string | null;
 }) {
   return invia<Richiesta>("/api/richieste", "POST", dati);
+}
+
+export function richiesteDirette() {
+  return chiama<Richiesta[]>("/api/richieste/dirette");
+}
+
+export function accettaRichiesta(id: number) {
+  return invia<Richiesta>(`/api/richieste/${id}/accetta`, "POST", {});
+}
+
+export function rifiutaRichiesta(id: number) {
+  return invia<Richiesta>(`/api/richieste/${id}/rifiuta`, "POST", {});
 }
 
 export function candidatureRicevute(richiestaId: number) {
@@ -213,6 +229,7 @@ export function creaProfiloFornitore(dati: {
   zonaOperativa: string;
   categorieIds: number[];
   tipo: TipoLavoratore;
+  tariffaOraria: number | null;
 }) {
   return invia<Fornitore>("/api/fornitore", "POST", dati);
 }
@@ -222,6 +239,7 @@ export function aggiornaProfiloFornitore(dati: {
   zonaOperativa: string;
   categorieIds: number[];
   tipo: TipoLavoratore;
+  tariffaOraria: number | null;
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);
 }
