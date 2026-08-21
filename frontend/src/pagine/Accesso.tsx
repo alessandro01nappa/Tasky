@@ -1,16 +1,14 @@
+import { LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, registrazione } from "../lib/api";
+import { login } from "../lib/api";
+import CampoPassword from "../componenti/CampoPassword";
 import { salvaToken } from "../lib/sessione";
 
 export default function Accesso() {
   const navigate = useNavigate();
-  const [modo, setModo] = useState<"login" | "registrazione">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nomeCompleto, setNomeCompleto] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [citta, setCitta] = useState("");
   const [errore, setErrore] = useState("");
   const [inCorso, setInCorso] = useState(false);
 
@@ -19,10 +17,7 @@ export default function Accesso() {
     setErrore("");
     setInCorso(true);
     try {
-      const risposta =
-        modo === "login"
-          ? await login({ email, password })
-          : await registrazione({ email, password, nomeCompleto, telefono, citta });
+      const risposta = await login({ email, password });
       salvaToken(risposta.token);
       navigate("/");
     } catch (e) {
@@ -33,66 +28,92 @@ export default function Accesso() {
   }
 
   return (
-    <div className="mx-auto max-w-sm p-4">
-      <h1 className="mb-4 text-xl font-bold">Tasky</h1>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* cerchio decorativo del design, corallo al 10% */}
+      <div className="absolute -top-10 -right-16 size-70 rounded-full bg-corallo/10" />
 
-      <div className="mb-4 flex gap-2">
-        <button type="button" onClick={() => setModo("login")} className="border px-3 py-1">
-          Accedi
-        </button>
-        <button type="button" onClick={() => setModo("registrazione")} className="border px-3 py-1">
-          Registrati
-        </button>
+      <div className="relative mx-auto flex max-w-md flex-col gap-4 px-6 pt-12">
+        <div className="flex items-center gap-3">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-corallo text-2xl font-bold text-white">
+            H
+          </div>
+          <div>
+            <p className="text-lg font-semibold">MarketPlace Locale</p>
+            <p className="text-sm text-fumo">Servizi di fiducia nel tuo quartiere</p>
+          </div>
+        </div>
+
+        <div>
+          <h1 className="text-3xl font-bold">Bentornato</h1>
+          <p className="mt-1.5 text-base text-fumo">
+            Accedi con mail e password per gestire richieste, chat e prenotazioni in un unico posto.
+          </p>
+        </div>
+
+        <form
+          onSubmit={invia}
+          className="flex flex-col gap-3 rounded-3xl border border-bordo bg-white p-4"
+        >
+          <div>
+            <p className="text-xl font-semibold">Accedi al tuo account</p>
+            <p className="mt-1 text-sm text-fumo">
+              Hai già un profilo cliente o lavoratore? Entra da qui.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="text-sm font-medium text-fumo">
+              Email
+            </label>
+            <div className="flex h-13 items-center gap-2 rounded-2xl border border-bordo px-4">
+              <input
+                id="email"
+                type="email"
+                placeholder="nome@email.it"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="min-w-0 flex-1 outline-none"
+              />
+              <span className="text-sm font-semibold text-corallo">@</span>
+            </div>
+          </div>
+
+          <CampoPassword
+            id="password"
+            etichetta="Password"
+            valore={password}
+            onCambia={setPassword}
+          />
+
+          <button
+            type="submit"
+            disabled={inCorso}
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-corallo font-semibold text-white"
+          >
+            <LogIn className="size-5" strokeWidth={2} />
+            Accedi
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/registrazione")}
+            className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-bordo font-semibold"
+          >
+            <UserPlus className="size-5" strokeWidth={2} />
+            Crea account
+          </button>
+
+          {errore && <p className="text-sm text-red-600">{errore}</p>}
+        </form>
+
+        <div className="pb-12">
+          <p className="text-sm font-medium text-fumo">Nuovo qui?</p>
+          <p className="mt-1 text-sm">
+            Crea un account e poi, dal profilo, passa alla modalità Lavoratore quando vuoi.
+          </p>
+        </div>
       </div>
-
-      <form onSubmit={invia} className="flex flex-col gap-2">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="border p-2"
-        />
-        <input
-          type="password"
-          placeholder="Password (min 8 caratteri)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="border p-2"
-        />
-
-        {modo === "registrazione" && (
-          <>
-            <input
-              placeholder="Nome e cognome"
-              value={nomeCompleto}
-              onChange={(e) => setNomeCompleto(e.target.value)}
-              required
-              className="border p-2"
-            />
-            <input
-              placeholder="Telefono"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              className="border p-2"
-            />
-            <input
-              placeholder="Città"
-              value={citta}
-              onChange={(e) => setCitta(e.target.value)}
-              className="border p-2"
-            />
-          </>
-        )}
-
-        <button type="submit" disabled={inCorso} className="border bg-black p-2 text-white">
-          {modo === "login" ? "Accedi" : "Crea account"}
-        </button>
-      </form>
-
-      {errore && <p className="mt-3 text-red-600">{errore}</p>}
     </div>
   );
 }

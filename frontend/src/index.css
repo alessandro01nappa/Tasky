@@ -2,15 +2,17 @@
 
 /* colori e ombre del design */
 @theme {
-  --color-crema: #fcf7f2;
-  --color-inchiostro: #2b2622;
-  --color-fumo: #6b6058;
-  --color-bordo: #e9ded4;
-  --color-corallo: #f67c5f;
+  --color-crema: #fff8f2;
+  --color-inchiostro: #2e2a27;
+  --color-fumo: #6f6a66;
+  --color-bordo: #e8ddd2;
+  --color-corallo: #f47c5c;
   --color-pesca: #fde6db;
   --color-sabbia: #f8f2ec;
   --color-miele: #fdf2d9;
   --color-verde-chiaro: #e4f3e9;
+  --color-pesca-tenue: #fff2e9;
+  --color-ambra: #e2a55c;
   --color-verde: #7aad91;
 
   --shadow-morbida: 0 10px 24px 0 rgba(90, 65, 47, 0.08);
@@ -20,5 +22,5 @@
 body {
   background-color: var(--color-crema);
   color: var(--color-inchiostro);
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: Inter, sans-serif;
 }
