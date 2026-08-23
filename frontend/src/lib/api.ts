@@ -76,6 +76,7 @@ export type Fornitore = {
   tariffaOraria: number | null;
   terminiAccettati: boolean;
   categorie: string[];
+  attivita: string[];
   dataCreazione: string;
   dataApprovazione: string | null;
 };
@@ -88,6 +89,7 @@ export type Lavoratore = {
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
   categorie: string[];
+  attivita: string[];
   media: number;
   numeroRecensioni: number;
 };
@@ -241,7 +243,7 @@ export function mioProfiloFornitore() {
 export function creaProfiloFornitore(dati: {
   descrizione: string;
   zonaOperativa: string;
-  categorieIds: number[];
+  attivitaIds: number[];
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
   terminiAccettati: boolean;
@@ -252,7 +254,7 @@ export function creaProfiloFornitore(dati: {
 export function aggiornaProfiloFornitore(dati: {
   descrizione: string;
   zonaOperativa: string;
-  categorieIds: number[];
+  attivitaIds: number[];
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
   terminiAccettati: boolean;

@@ -35,7 +35,8 @@ export default function ElencoProfessionisti() {
         l.nome.toLowerCase().includes(testo) ||
         l.descrizione.toLowerCase().includes(testo) ||
         l.zonaOperativa.toLowerCase().includes(testo) ||
-        l.categorie.some((c) => c.toLowerCase().includes(testo))
+        l.categorie.some((c) => c.toLowerCase().includes(testo)) ||
+        l.attivita.some((a) => a.toLowerCase().includes(testo))
       );
     });
     return perRecensioni ? [...filtrati].sort((a, b) => b.media - a.media) : filtrati;

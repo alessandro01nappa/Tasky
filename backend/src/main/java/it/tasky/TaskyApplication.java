@@ -22,14 +22,14 @@ public class TaskyApplication {
         return args -> {
             List<String> nomi = List.of(
                     "Pulizie",
-                    "Giardinaggio",
+                    "Giardino ed esterni",
                     "Montaggi mobili",
                     "Traslochi e trasporti",
-                    "Manutenzioni e riparazioni",
-                    "Idraulica",
-                    "Elettricista",
-                    "Imbianchino",
-                    "Falegnameria",
+                    "Riparazioni e piccoli lavori",
+                    "Impianti idraulici",
+                    "Impianti elettrici",
+                    "Imbiancatura e verniciatura",
+                    "Lavori in legno",
                     "Sgomberi e smaltimento",
                     "Informatica e tecnologia",
                     "Cura animali",
@@ -57,7 +57,7 @@ public class TaskyApplication {
                             "Lavaggio vetri",
                             "Pulizia box e garage"));
             attivita.put(
-                    "Giardinaggio",
+                    "Giardino ed esterni",
                     List.of(
                             "Taglio erba",
                             "Potatura siepi",
@@ -84,7 +84,7 @@ public class TaskyApplication {
                             "Trasporto elettrodomestici",
                             "Svuoto cantina"));
             attivita.put(
-                    "Manutenzioni e riparazioni",
+                    "Riparazioni e piccoli lavori",
                     List.of(
                             "Riparazioni varie in casa",
                             "Fissaggio mensole",
@@ -93,7 +93,7 @@ public class TaskyApplication {
                             "Sostituzione maniglie",
                             "Sigillature e silicone"));
             attivita.put(
-                    "Idraulica",
+                    "Impianti idraulici",
                     List.of(
                             "Riparazione perdite",
                             "Sostituzione rubinetti",
@@ -102,7 +102,7 @@ public class TaskyApplication {
                             "Sostituzione flessibili",
                             "Riparazione cassetta wc"));
             attivita.put(
-                    "Elettricista",
+                    "Impianti elettrici",
                     List.of(
                             "Sostituzione prese e interruttori",
                             "Installazione lampadari",
@@ -111,7 +111,7 @@ public class TaskyApplication {
                             "Riparazione impianto",
                             "Installazione videocitofono"));
             attivita.put(
-                    "Imbianchino",
+                    "Imbiancatura e verniciatura",
                     List.of(
                             "Imbiancatura interni",
                             "Verniciatura porte e infissi",
@@ -120,7 +120,7 @@ public class TaskyApplication {
                             "Ritocchi e riparazioni",
                             "Posa carta da parati"));
             attivita.put(
-                    "Falegnameria",
+                    "Lavori in legno",
                     List.of(
                             "Riparazione mobili",
                             "Mensole su misura",

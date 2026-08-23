@@ -52,14 +52,21 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
             ? `${lavoratore.media} • ${lavoratore.numeroRecensioni}`
             : "Nessuna recensione"}
         </span>
-        {lavoratore.categorie.map((categoria) => (
-          <span
-            key={categoria}
-            className="rounded-full bg-sabbia px-2.5 py-1 text-xs font-medium text-fumo"
-          >
-            {categoria}
+        {(lavoratore.attivita.length > 0 ? lavoratore.attivita : lavoratore.categorie)
+          .slice(0, 3)
+          .map((voce) => (
+            <span
+              key={voce}
+              className="rounded-full bg-sabbia px-2.5 py-1 text-xs font-medium text-fumo"
+            >
+              {voce}
+            </span>
+          ))}
+        {lavoratore.attivita.length > 3 && (
+          <span className="rounded-full bg-sabbia px-2.5 py-1 text-xs font-medium text-fumo">
+            +{lavoratore.attivita.length - 3}
           </span>
-        ))}
+        )}
       </div>
 
       <p className="mt-3 line-clamp-2 text-sm text-fumo">{lavoratore.descrizione}</p>

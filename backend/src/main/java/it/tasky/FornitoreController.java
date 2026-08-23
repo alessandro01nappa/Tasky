@@ -23,6 +23,7 @@ public class FornitoreController {
 
     private final ProfiloFornitoreRepository profili;
     private final CategoriaServizioRepository categorie;
+    private final AttivitaServizioRepository attivita;
     private final CandidaturaRepository candidature;
     private final RecensioneRepository recensioni;
     private final UtenteCorrente utenteCorrente;
@@ -30,11 +31,13 @@ public class FornitoreController {
     public FornitoreController(
             ProfiloFornitoreRepository profili,
             CategoriaServizioRepository categorie,
+            AttivitaServizioRepository attivita,
             CandidaturaRepository candidature,
             RecensioneRepository recensioni,
             UtenteCorrente utenteCorrente) {
         this.profili = profili;
         this.categorie = categorie;
+        this.attivita = attivita;
         this.candidature = candidature;
         this.recensioni = recensioni;
         this.utenteCorrente = utenteCorrente;
@@ -44,6 +47,7 @@ public class FornitoreController {
             @NotBlank String descrizione,
             @NotBlank String zonaOperativa,
             List<Long> categorieIds,
+            List<Long> attivitaIds,
             TipoLavoratore tipo,
             BigDecimal tariffaOraria,
             Boolean terminiAccettati) {}
@@ -57,6 +61,7 @@ public class FornitoreController {
             BigDecimal tariffaOraria,
             boolean terminiAccettati,
             List<String> categorie,
+            List<String> attivita,
             LocalDateTime dataCreazione,
             LocalDateTime dataApprovazione) {
 
@@ -71,6 +76,10 @@ public class FornitoreController {
                     profilo.isTerminiAccettati(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
+                            .toList(),
+                    profilo.getAttivita().stream()
+                            .map(AttivitaServizio::getNome)
+                            .sorted()
                             .toList(),
                     profilo.getDataCreazione(),
                     profilo.getDataApprovazione());
@@ -111,6 +120,7 @@ public class FornitoreController {
             TipoLavoratore tipo,
             BigDecimal tariffaOraria,
             List<String> categorie,
+            List<String> attivita,
             double media,
             int numeroRecensioni) {}
 
@@ -166,6 +176,10 @@ public class FornitoreController {
                             profilo.getCategorie().stream()
                                     .map(CategoriaServizio::getNome)
                                     .toList(),
+                            profilo.getAttivita().stream()
+                                    .map(AttivitaServizio::getNome)
+                                    .sorted()
+                                    .toList(),
                             Math.round(media * 10) / 10.0,
                             ricevute.size());
                 })
@@ -192,8 +206,18 @@ public class FornitoreController {
         profilo.setTariffaOraria(dati.tariffaOraria());
         profilo.setTerminiAccettati(Boolean.TRUE.equals(dati.terminiAccettati()));
         aggiornaApprovazione(profilo);
-        profilo.getCategorie().clear();
-        profilo.getCategorie().addAll(categorieRichieste(dati.categorieIds()));
+        if (dati.attivitaIds() != null && !dati.attivitaIds().isEmpty()) {
+            List<AttivitaServizio> scelte = attivitaRichieste(dati.attivitaIds());
+            profilo.getAttivita().clear();
+            profilo.getAttivita().addAll(scelte);
+            // le categorie non si scelgono più: sono quelle dei lavori dichiarati
+            profilo.getCategorie().clear();
+            scelte.forEach(a -> profilo.getCategorie().add(a.getCategoria()));
+        } else {
+            profilo.getAttivita().clear();
+            profilo.getCategorie().clear();
+            profilo.getCategorie().addAll(categorieRichieste(dati.categorieIds()));
+        }
     }
 
     /**
@@ -212,6 +236,14 @@ public class FornitoreController {
             profilo.setStato(StatoFornitore.IN_ATTESA);
             profilo.setDataApprovazione(null);
         }
+    }
+
+    private List<AttivitaServizio> attivitaRichieste(List<Long> ids) {
+        List<AttivitaServizio> trovate = attivita.findAllById(ids);
+        if (trovate.size() != ids.stream().distinct().count()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attività non trovata");
+        }
+        return trovate;
     }
 
     private List<CategoriaServizio> categorieRichieste(List<Long> ids) {

@@ -60,6 +60,14 @@ public class ProfiloFornitore {
             inverseJoinColumns = @JoinColumn(name = "categoria_servizio_id"))
     private Set<CategoriaServizio> categorie = new LinkedHashSet<>();
 
+    /** I lavori concreti che il lavoratore dichiara di svolgere. Le categorie si ricavano da questi. */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "attivita_fornitore",
+            joinColumns = @JoinColumn(name = "profilo_fornitore_id"),
+            inverseJoinColumns = @JoinColumn(name = "attivita_servizio_id"))
+    private Set<AttivitaServizio> attivita = new LinkedHashSet<>();
+
     public Long getId() {
         return id;
     }
@@ -130,6 +138,10 @@ public class ProfiloFornitore {
 
     public void setDataApprovazione(LocalDateTime dataApprovazione) {
         this.dataApprovazione = dataApprovazione;
+    }
+
+    public Set<AttivitaServizio> getAttivita() {
+        return attivita;
     }
 
     public Set<CategoriaServizio> getCategorie() {

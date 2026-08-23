@@ -126,13 +126,19 @@ export default function ProfiloLavoratore() {
 
         <h2 className="mt-5 text-lg font-semibold">Servizi offerti</h2>
         <div className="mt-3 flex flex-col gap-3.5 rounded-3xl border border-bordo bg-white p-4">
-          {lavoratore.categorie.map((categoria) => (
-            <p key={categoria} className="text-sm font-semibold">
-              {categoria}
+          {lavoratore.attivita.map((voce) => (
+            <p key={voce} className="text-sm font-semibold">
+              {voce}
             </p>
           ))}
-          {lavoratore.categorie.length === 0 && (
-            <p className="text-sm text-fumo">Nessuna categoria indicata.</p>
+          {lavoratore.attivita.length === 0 &&
+            lavoratore.categorie.map((categoria) => (
+              <p key={categoria} className="text-sm font-semibold">
+                {categoria}
+              </p>
+            ))}
+          {lavoratore.attivita.length === 0 && lavoratore.categorie.length === 0 && (
+            <p className="text-sm text-fumo">Nessun lavoro indicato.</p>
           )}
         </div>
 

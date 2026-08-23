@@ -5,8 +5,10 @@ import RiquadroInfo from "../componenti/RiquadroInfo";
 import Pagina from "../componenti/Pagina";
 import {
   aggiornaProfiloFornitore,
+  attivitaDiCategoria,
   categorie,
   creaProfiloFornitore,
+  type Attivita,
   type Categoria,
   type TipoLavoratore,
 } from "../lib/api";
@@ -17,7 +19,10 @@ export default function DiventaLavoratore() {
   const profilo = useProfiloLavoratore();
   const modifica = profilo != null;
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
-  const [scelte, setScelte] = useState<number[]>([]);
+  const [categoriaAperta, setCategoriaAperta] = useState<number | null>(null);
+  const [attivitaAperte, setAttivitaAperte] = useState<Attivita[]>([]);
+  // i lavori scelti, con il nome accanto per poterli mostrare senza ricaricare
+  const [scelte, setScelte] = useState<Attivita[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
   const [tariffa, setTariffa] = useState("");
   const [termini, setTermini] = useState(false);
@@ -41,24 +46,36 @@ export default function DiventaLavoratore() {
     setTermini(profilo.terminiAccettati);
   }, [profilo]);
 
-  // il profilo salva i nomi delle categorie, il form lavora sugli id
+  // il profilo salva i nomi dei lavori: risalgo agli id nelle categorie che lo riguardano
   useEffect(() => {
-    if (!profilo || elencoCategorie.length === 0) return;
-    setScelte(
-      elencoCategorie.filter((c) => profilo.categorie.includes(c.nome)).map((c) => c.id),
-    );
+    if (!profilo || elencoCategorie.length === 0 || profilo.attivita.length === 0) return;
+    const sue = elencoCategorie.filter((c) => profilo.categorie.includes(c.nome));
+    Promise.all(sue.map((c) => attivitaDiCategoria(c.id)))
+      .then((gruppi) =>
+        setScelte(gruppi.flat().filter((a) => profilo.attivita.includes(a.nome))),
+      )
+      .catch(() => setScelte([]));
   }, [profilo, elencoCategorie]);
 
-  function alterna(id: number) {
+  useEffect(() => {
+    if (categoriaAperta === null) return;
+    attivitaDiCategoria(categoriaAperta)
+      .then(setAttivitaAperte)
+      .catch(() => setAttivitaAperte([]));
+  }, [categoriaAperta]);
+
+  function alterna(lavoro: Attivita) {
     setScelte((attuali) =>
-      attuali.includes(id) ? attuali.filter((x) => x !== id) : [...attuali, id],
+      attuali.some((a) => a.id === lavoro.id)
+        ? attuali.filter((a) => a.id !== lavoro.id)
+        : [...attuali, lavoro],
     );
   }
 
   // le stesse condizioni che il backend usa per approvare
   const mancanti = [
     tariffa ? null : "la tariffa oraria",
-    scelte.length > 0 ? null : "almeno una categoria",
+    scelte.length > 0 ? null : "almeno un lavoro",
     termini ? null : "l'accettazione dei termini",
   ].filter((x): x is string => x !== null);
 
@@ -70,7 +87,7 @@ export default function DiventaLavoratore() {
       const dati = {
         descrizione,
         zonaOperativa,
-        categorieIds: scelte,
+        attivitaIds: scelte.map((a) => a.id),
         tipo,
         tariffaOraria: tariffa ? Number(tariffa) : null,
         terminiAccettati: termini,
@@ -94,7 +111,7 @@ export default function DiventaLavoratore() {
       <h1 className="text-3xl font-bold">{modifica ? "Il tuo profilo lavoratore" : "Diventa lavoratore"}</h1>
       <p className="mt-2 text-base text-fumo">
         {modifica
-          ? "Aggiorna descrizione, zona e categorie del tuo profilo."
+          ? "Aggiorna descrizione, zona e lavori che svolgi."
           : "Racconta cosa sai fare e dove lavori. Il profilo va approvato prima di poterti candidare."}
       </p>
 
@@ -171,16 +188,37 @@ export default function DiventaLavoratore() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-medium text-fumo">Categorie che segui</span>
+          <span className="text-xs font-medium text-fumo">Che lavori svolgi</span>
+
+          {scelte.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {scelte.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => alterna(a)}
+                  className="h-9 rounded-full border border-corallo bg-corallo px-4 text-sm font-semibold text-white"
+                >
+                  {a.nome} ×
+                </button>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs text-fumo">
+            Apri una categoria e scegli i lavori che sai fare. Le categorie del tuo profilo si
+            ricavano da questi.
+          </p>
+
           <div className="flex flex-wrap gap-2">
             {elencoCategorie.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                onClick={() => alterna(c.id)}
+                onClick={() => setCategoriaAperta(categoriaAperta === c.id ? null : c.id)}
                 className={`h-9 rounded-full border px-4 text-sm font-semibold ${
-                  scelte.includes(c.id)
-                    ? "border-corallo bg-corallo text-white"
+                  categoriaAperta === c.id
+                    ? "border-inchiostro bg-inchiostro text-white"
                     : "border-bordo bg-white text-fumo"
                 }`}
               >
@@ -188,6 +226,25 @@ export default function DiventaLavoratore() {
               </button>
             ))}
           </div>
+
+          {categoriaAperta !== null && attivitaAperte.length > 0 && (
+            <div className="flex flex-wrap gap-2 rounded-2xl bg-pesca-tenue p-3">
+              {attivitaAperte.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => alterna(a)}
+                  className={`h-9 rounded-full border px-4 text-sm font-semibold ${
+                    scelte.some((x) => x.id === a.id)
+                      ? "border-corallo bg-corallo text-white"
+                      : "border-bordo bg-white text-fumo"
+                  }`}
+                >
+                  {a.nome}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <label className="flex items-center gap-2.5 text-sm text-fumo">
