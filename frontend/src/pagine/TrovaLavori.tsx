@@ -1,5 +1,5 @@
 import { Briefcase } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import CardRichiesta from "../componenti/CardRichiesta";
@@ -9,6 +9,9 @@ import StatoVuoto from "../componenti/StatoVuoto";
 import { categorie, richiesteAperte, type Categoria, type Richiesta } from "../lib/api";
 import { useProfiloLavoratore } from "../lib/lavoratore";
 
+// leaflet pesa quanto mezza app: lo scarica solo chi arriva qui, non ogni cliente
+const MappaLavori = lazy(() => import("../componenti/MappaLavori"));
+
 /** La home di chi lavora: solo annunci da prendere. */
 export default function TrovaLavori() {
   const profilo = useProfiloLavoratore();
@@ -17,23 +20,33 @@ export default function TrovaLavori() {
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [richieste, setRichieste] = useState<Richiesta[]>([]);
   const [soloMie, setSoloMie] = useState(true);
+  const [entroKm, setEntroKm] = useState<number | null>(null);
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
   useEffect(() => {
-    Promise.all([categorie(), richiesteAperte()])
-      .then(([c, r]) => {
-        setElencoCategorie(c);
-        setRichieste(r);
-      })
-      .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
-      .finally(() => setCaricato(true));
+    categorie().then(setElencoCategorie).catch(() => setElencoCategorie([]));
   }, []);
 
+  // il raggio lo applica il backend: e' l'unico che conosce il punto esatto dei lavori
+  useEffect(() => {
+    richiesteAperte(entroKm ?? undefined)
+      .then(setRichieste)
+      .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
+      .finally(() => setCaricato(true));
+  }, [entroKm]);
+
   const mieCategorie = profilo?.categorie ?? [];
+  const miaPosizione: [number, number] | null =
+    profilo?.latitudine != null && profilo.longitudine != null
+      ? [profilo.latitudine, profilo.longitudine]
+      : null;
+  const RAGGI = [10, 25, 50];
   const visibili = richieste
     .filter((r) => !filtro || r.categoria === filtro)
     .filter((r) => !soloMie || mieCategorie.length === 0 || mieCategorie.includes(r.categoria));
+  const sullaMappa = visibili.filter((r) => r.latitudine !== null);
+  const senzaIndirizzo = visibili.length - sullaMappa.length;
 
   return (
     <Pagina larga>
@@ -92,6 +105,39 @@ export default function TrovaLavori() {
             );
           })}
       </div>
+
+      {miaPosizione && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-fumo">Da {profilo?.zonaOperativa}</span>
+          {RAGGI.map((km) => (
+            <button
+              key={km}
+              type="button"
+              onClick={() => setEntroKm(entroKm === km ? null : km)}
+              className={`h-9 rounded-full border px-4 text-sm font-semibold ${
+                entroKm === km ? "border-verde bg-verde text-white" : "border-bordo bg-white text-fumo"
+              }`}
+            >
+              entro {km} km
+            </button>
+          ))}
+        </div>
+      )}
+
+      {sullaMappa.length > 0 && (
+        <div className="mt-4">
+          <Suspense fallback={<div className="h-72 rounded-3xl bg-sabbia md:h-96" />}>
+            <MappaLavori richieste={sullaMappa} centro={miaPosizione} />
+          </Suspense>
+          {senzaIndirizzo > 0 && (
+            <p className="mt-2 text-xs text-fumo">
+              {senzaIndirizzo === 1
+                ? "Un lavoro non ha un indirizzo, quindi sulla mappa non compare."
+                : `${senzaIndirizzo} lavori non hanno un indirizzo, quindi sulla mappa non compaiono.`}
+            </p>
+          )}
+        </div>
+      )}
 
       <h2 className="mt-8 text-lg font-semibold">
         {filtro ?? "Tutte le richieste"}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import CampoIndirizzo from "../componenti/CampoIndirizzo";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
@@ -29,6 +30,7 @@ export default function NuovaRichiesta() {
   const [titolo, setTitolo] = useState("");
   const [descrizione, setDescrizione] = useState("");
   const [citta, setCitta] = useState("");
+  const [indirizzo, setIndirizzo] = useState("");
   const [budget, setBudget] = useState("");
   const [preventivo, setPreventivo] = useState(false);
   const [dataPreferita, setDataPreferita] = useState("");
@@ -61,7 +63,7 @@ export default function NuovaRichiesta() {
 
   const completo = [
     categoriaId !== null && titolo.trim() !== "",
-    descrizione.trim() !== "" && citta.trim() !== "",
+    descrizione.trim() !== "" && indirizzo.trim() !== "" && citta.trim() !== "",
     true,
     true,
   ];
@@ -77,6 +79,7 @@ export default function NuovaRichiesta() {
         titolo,
         descrizione,
         citta,
+        indirizzo,
         budget: preventivo || !budget ? null : Number(budget),
         dataPreferita: dataPreferita || null,
       });
@@ -203,6 +206,19 @@ export default function NuovaRichiesta() {
             placeholder="Descrivi il problema, indica materiali e misure."
             className="rounded-2xl border border-bordo p-4 outline-none"
           />
+
+          <div className="mt-2">
+            <CampoIndirizzo
+              etichetta="Indirizzo"
+              aiuto="Via e civico. Lo vedrai solo tu, finché non assegni il lavoro."
+              segnaposto="Via del Corso 12"
+              valore={indirizzo}
+              onCambia={setIndirizzo}
+              onTrovato={(luogo) => {
+                if (luogo?.citta) setCitta(luogo.citta);
+              }}
+            />
+          </div>
 
           <label htmlFor="citta" className="mt-2 text-sm font-semibold text-fumo">
             Città

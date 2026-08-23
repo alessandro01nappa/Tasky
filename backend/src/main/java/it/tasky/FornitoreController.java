@@ -64,6 +64,9 @@ public class FornitoreController {
             Long id,
             String descrizione,
             String zonaOperativa,
+            /** Il punto della zona: torna solo al diretto interessato, per centrare la mappa. */
+            Double latitudine,
+            Double longitudine,
             StatoFornitore stato,
             TipoLavoratore tipo,
             List<VoceTariffa> tariffe,
@@ -78,6 +81,8 @@ public class FornitoreController {
                     profilo.getId(),
                     profilo.getDescrizione(),
                     profilo.getZonaOperativa(),
+                    profilo.getLatitudine(),
+                    profilo.getLongitudine(),
                     profilo.getStato(),
                     profilo.getTipo(),
                     tariffe,

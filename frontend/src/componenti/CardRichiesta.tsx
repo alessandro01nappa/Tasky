@@ -27,6 +27,7 @@ export default function CardRichiesta({ richiesta }: { richiesta: Richiesta }) {
       <p className="mt-1.5 flex items-center gap-1.5 text-sm text-fumo">
         <MapPin className="size-4 shrink-0" strokeWidth={1.75} />
         {richiesta.attivita ?? richiesta.categoria} • {richiesta.citta}
+        {richiesta.distanzaKm !== null && ` • a ${richiesta.distanzaKm} km`}
         {richiesta.budget != null && ` • ${richiesta.budget} €`}
       </p>
 

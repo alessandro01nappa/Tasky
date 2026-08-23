@@ -21,6 +21,12 @@ export type Richiesta = {
   titolo: string;
   descrizione: string;
   citta: string;
+  /** Via e civico: arrivano solo al cliente e a chi ha preso il lavoro. */
+  indirizzo: string | null;
+  latitudine: number | null;
+  longitudine: number | null;
+  /** Quanto dista dalla zona del lavoratore, se il backend sa dove sono entrambi. */
+  distanzaKm: number | null;
   budget: number | null;
   dataPreferita: string | null;
   stato: "APERTA" | "ASSEGNATA" | "COMPLETATA" | "ANNULLATA";
@@ -72,6 +78,8 @@ export type Fornitore = {
   id: number;
   descrizione: string;
   zonaOperativa: string;
+  latitudine: number | null;
+  longitudine: number | null;
   stato: "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
   tipo: TipoLavoratore;
   tariffe: { categoriaId: number; categoria: string; tariffaOraria: number }[];
@@ -179,8 +187,20 @@ export function attivitaDiCategoria(categoriaId: number) {
   return chiama<Attivita[]>(`/api/categorie/${categoriaId}/attivita`);
 }
 
-export function richiesteAperte() {
-  return chiama<Richiesta[]>("/api/richieste");
+export function richiesteAperte(entroKm?: number) {
+  return chiama<Richiesta[]>(entroKm ? `/api/richieste?entroKm=${entroKm}` : "/api/richieste");
+}
+
+export type Luogo = {
+  latitudine: number;
+  longitudine: number;
+  indirizzo: string;
+  citta: string | null;
+};
+
+/** Chiede al backend di tradurre un indirizzo scritto a mano in un punto sulla mappa. */
+export function cercaLuogo(indirizzo: string) {
+  return chiama<Luogo>(`/api/luoghi?indirizzo=${encodeURIComponent(indirizzo)}`);
 }
 
 export function mieRichieste() {
@@ -198,6 +218,7 @@ export function creaRichiesta(dati: {
   titolo: string;
   descrizione: string;
   citta: string;
+  indirizzo?: string;
   budget?: number | null;
   dataPreferita?: string | null;
 }) {

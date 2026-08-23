@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import CampoIndirizzo from "../componenti/CampoIndirizzo";
 import TariffaCategoria from "../componenti/TariffaCategoria";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -170,19 +171,15 @@ export default function DiventaLavoratore() {
         </div>
 
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="zona" className="text-xs font-medium text-fumo">
-            Zona operativa
-          </label>
-          <input
-            id="zona"
-            value={zonaOperativa}
-            onChange={(e) => setZonaOperativa(e.target.value)}
-            required
-            placeholder="Roma sud"
-            className="h-11 rounded-2xl border border-bordo px-4 text-sm outline-none"
-          />
-        </div>
+        <CampoIndirizzo
+          etichetta="Zona operativa"
+          aiuto="Il comune da cui parti: serve a misurare quanto distano i lavori."
+          segnaposto="Ciampino"
+          valore={zonaOperativa}
+          onCambia={setZonaOperativa}
+          onTrovato={() => {}}
+          richiesto
+        />
 
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-fumo">Che lavori svolgi</span>
