@@ -1,11 +1,11 @@
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import CardLavoratore from "../componenti/CardLavoratore";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
-import RiquadroInfo from "../componenti/RiquadroInfo";
+import StatoVuoto from "../componenti/StatoVuoto";
 import ScheletroHome from "../componenti/ScheletroHome";
 import {
   categorie,
@@ -146,11 +146,16 @@ export default function Esplora() {
 
             {migliori.length === 0 && (
               <div className="mt-3.5">
-                <RiquadroInfo>
-                  {filtro
-                    ? `Nessun ${tipo === "PROFESSIONISTA" ? "professionista" : "hobbista"} per ${filtro}.`
-                    : "Nessuno disponibile in questa modalità per ora."}
-                </RiquadroInfo>
+                <StatoVuoto
+                  Icona={Users}
+                  titolo="Nessun risultato in questa zona"
+                  testo={
+                    filtro
+                      ? `Nessun ${tipo === "PROFESSIONISTA" ? "professionista" : "hobbista"} per ${filtro}. Pubblica una richiesta e lascia arrivare le proposte.`
+                      : "Prova un'altra categoria oppure pubblica tu una richiesta per ricevere risposte."
+                  }
+                  azione={{ etichetta: "Pubblica richiesta", percorso: "/richieste/nuova" }}
+                />
               </div>
             )}
 

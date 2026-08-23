@@ -1,9 +1,9 @@
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
 import CardLavoratore from "../componenti/CardLavoratore";
-import RiquadroInfo from "../componenti/RiquadroInfo";
+import StatoVuoto from "../componenti/StatoVuoto";
 import { elencoLavoratori, type Lavoratore, type TipoLavoratore } from "../lib/api";
 
 const TIPI = [
@@ -96,11 +96,16 @@ export default function ElencoProfessionisti() {
 
       {caricato && visibili.length === 0 && (
         <div className="mt-3.5">
-          <RiquadroInfo>
-            {cerca
-              ? "Nessun risultato per questa ricerca."
-              : "Nessun lavoratore approvato in questa categoria per ora."}
-          </RiquadroInfo>
+          <StatoVuoto
+            Icona={Users}
+            titolo="Nessun risultato in questa zona"
+            testo={
+              cerca
+                ? "Nessuno corrisponde a questa ricerca. Prova con un altro lavoro o categoria."
+                : "Nessun lavoratore approvato qui per ora. Pubblica una richiesta e lascia arrivare le proposte."
+            }
+            azione={{ etichetta: "Pubblica richiesta", percorso: "/richieste/nuova" }}
+          />
         </div>
       )}
 

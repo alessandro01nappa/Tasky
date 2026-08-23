@@ -1,9 +1,9 @@
-import { Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
-import RiquadroInfo from "../componenti/RiquadroInfo";
+import StatoVuoto from "../componenti/StatoVuoto";
 import {
   candidatureRicevute,
   mieRichieste,
@@ -176,11 +176,20 @@ export default function MieRichieste() {
 
       {caricato && visibili.length === 0 && (
         <div className="mt-3.5">
-          <RiquadroInfo>
-            {filtro === "APERTA"
-              ? "Nessuna richiesta aperta. Creane una e ricevi proposte dai lavoratori della tua zona."
-              : "Nessuna richiesta in questo stato."}
-          </RiquadroInfo>
+          <StatoVuoto
+            Icona={ClipboardList}
+            titolo={filtro === "APERTA" ? "Nessuna richiesta aperta" : "Niente in questo stato"}
+            testo={
+              filtro === "APERTA"
+                ? "Pubblica un annuncio e ricevi proposte dai lavoratori della tua zona."
+                : "Qui compariranno le richieste quando raggiungeranno questo stato."
+            }
+            azione={
+              filtro === "APERTA"
+                ? { etichetta: "Crea un annuncio", percorso: "/richieste/nuova" }
+                : undefined
+            }
+          />
         </div>
       )}
 

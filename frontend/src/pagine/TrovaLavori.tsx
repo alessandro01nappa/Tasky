@@ -1,10 +1,11 @@
+import { Briefcase } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import CardRichiesta from "../componenti/CardRichiesta";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
-import RiquadroInfo from "../componenti/RiquadroInfo";
+import StatoVuoto from "../componenti/StatoVuoto";
 import { categorie, richiesteAperte, type Categoria, type Richiesta } from "../lib/api";
 import { useProfiloLavoratore } from "../lib/lavoratore";
 
@@ -105,11 +106,20 @@ export default function TrovaLavori() {
 
       {caricato && visibili.length === 0 && (
         <div className="mt-3">
-          <RiquadroInfo>
-            {soloMie && mieCategorie.length > 0
-              ? "Nessuna richiesta aperta nelle tue categorie. Prova a vedere tutte."
-              : "Non ci sono richieste aperte in questo momento."}
-          </RiquadroInfo>
+          <StatoVuoto
+            Icona={Briefcase}
+            titolo="Nessun lavoro disponibile"
+            testo={
+              soloMie && mieCategorie.length > 0
+                ? "Non ci sono richieste aperte nelle tue categorie. Prova a vedere tutte, oppure aggiungi altri lavori al tuo profilo."
+                : "Non ci sono richieste aperte in questo momento. Riprova più tardi."
+            }
+            azione={
+              soloMie && mieCategorie.length > 0
+                ? { etichetta: "Aggiungi altri lavori", percorso: "/diventa-lavoratore" }
+                : undefined
+            }
+          />
         </div>
       )}
 
