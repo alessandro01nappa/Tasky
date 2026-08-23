@@ -1,7 +1,7 @@
 # Tasky
 
 Web app mobile first per mettere in contatto chi cerca piccoli servizi pratici con chi vuole offrirli:
-lavori domestici, manutenzioni, giardinaggio, montaggi, pulizie e assistenza pratica.
+lavori domestici, riparazioni, giardinaggio, montaggi, pulizie, traslochi e sgomberi.
 
 Esiste un solo tipo di account. Lo stesso utente agisce da cliente quando pubblica una richiesta,
 e da fornitore quando si candida — ma solo dopo aver completato la verifica.
