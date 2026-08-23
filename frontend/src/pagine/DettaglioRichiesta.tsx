@@ -1,8 +1,9 @@
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
+import StatoSuccesso from "../componenti/StatoSuccesso";
 import {
   candidati,
   candidatureRicevute,
@@ -308,9 +309,12 @@ export default function DettaglioRichiesta() {
       )}
 
       {esito && (
-        <div className="mt-4 flex gap-2.5 rounded-3xl bg-verde-chiaro p-3.5">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-verde" strokeWidth={1.75} />
-          <p className="text-sm">{esito}</p>
+        <div className="mt-5">
+          <StatoSuccesso
+            Icona={Send}
+            titolo="Candidatura inviata"
+            testo="Il cliente la vedrà fra le proposte ricevute. La trovi nella tua dashboard."
+          />
         </div>
       )}
 

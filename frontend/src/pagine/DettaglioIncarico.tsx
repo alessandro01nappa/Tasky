@@ -1,7 +1,8 @@
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, PartyPopper, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Pagina from "../componenti/Pagina";
+import StatoSuccesso from "../componenti/StatoSuccesso";
 import {
   cambiaStatoIncarico,
   creaRecensione,
@@ -113,6 +114,16 @@ export default function DettaglioIncarico() {
         >
           {prossimo.etichetta}
         </button>
+      )}
+
+      {recensione && dati.stato === "COMPLETATO" && !sonoIlLavoratore && (
+        <div className="mt-5">
+          <StatoSuccesso
+            Icona={PartyPopper}
+            titolo="Lavoro concluso"
+            testo="Hai lasciato la tua recensione: aiuta gli altri clienti a scegliere."
+          />
+        </div>
       )}
 
       {recensione && (
