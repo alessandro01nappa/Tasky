@@ -1,4 +1,4 @@
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Pagina from "../componenti/Pagina";
@@ -113,7 +113,16 @@ export default function DettaglioRichiesta() {
       <h1 className="mt-4 text-3xl font-bold">{dati.titolo}</h1>
       <p className="mt-2.5 text-sm text-fumo">
         Richiesta pubblicata il {dataPubblicazione} • {dati.citta}
+        {dati.distanzaKm !== null && ` • a ${dati.distanzaKm} km da te`}
       </p>
+
+      {/* l'indirizzo arriva dal backend solo a chi ne ha diritto: se c'è, si mostra */}
+      {dati.indirizzo && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm font-medium">
+          <MapPin className="size-4 shrink-0 text-corallo" strokeWidth={2} />
+          {dati.indirizzo}
+        </p>
+      )}
 
       <div className="mt-2.5 flex flex-wrap gap-2">
         <span
