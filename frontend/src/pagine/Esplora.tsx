@@ -90,7 +90,7 @@ export default function Esplora() {
                       <IconaCategoria nome={categoria.nome} className="size-7" />
                     </span>
                     <span
-                      className={`mt-2 block text-xs font-medium ${attiva ? "text-corallo" : "text-fumo"}`}
+                      className={`mt-2 block text-xs font-medium break-words ${attiva ? "text-corallo" : "text-fumo"}`}
                     >
                       {categoria.nome}
                     </span>

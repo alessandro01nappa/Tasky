@@ -30,6 +30,10 @@ public class RichiestaServizio {
     @JoinColumn(name = "categoria_id", nullable = false)
     private CategoriaServizio categoria;
 
+    /** Il lavoro specifico scelto dal cliente. Le richieste vecchie non ce l'hanno. */
+    @ManyToOne
+    private AttivitaServizio attivita;
+
     @Column(nullable = false, length = 150)
     private String titolo;
 
@@ -72,6 +76,14 @@ public class RichiestaServizio {
 
     public void setCategoria(CategoriaServizio categoria) {
         this.categoria = categoria;
+    }
+
+    public AttivitaServizio getAttivita() {
+        return attivita;
+    }
+
+    public void setAttivita(AttivitaServizio attivita) {
+        this.attivita = attivita;
     }
 
     public String getTitolo() {

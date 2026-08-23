@@ -10,6 +10,11 @@ export type Categoria = {
   nome: string;
 };
 
+export type Attivita = {
+  id: number;
+  nome: string;
+};
+
 export type Richiesta = {
   id: number;
   titolo: string;
@@ -19,6 +24,7 @@ export type Richiesta = {
   dataPreferita: string | null;
   stato: "APERTA" | "ASSEGNATA" | "COMPLETATA" | "ANNULLATA";
   categoria: string;
+  attivita: string | null;
   cliente: string;
   fornitoreRichiesto: string | null;
   dataCreazione: string;
@@ -161,6 +167,10 @@ export function categorie() {
   return chiama<Categoria[]>("/api/categorie");
 }
 
+export function attivitaDiCategoria(categoriaId: number) {
+  return chiama<Attivita[]>(`/api/categorie/${categoriaId}/attivita`);
+}
+
 export function richiesteAperte() {
   return chiama<Richiesta[]>("/api/richieste");
 }
@@ -175,6 +185,7 @@ export function richiesta(id: number) {
 
 export function creaRichiesta(dati: {
   categoriaId: number;
+  attivitaId?: number;
   fornitoreId?: number;
   titolo: string;
   descrizione: string;

@@ -27,6 +27,7 @@ public class RichiestaController {
     private final CategoriaServizioRepository categorie;
     private final IncaricoRepository incarichi;
     private final ProfiloFornitoreRepository profili;
+    private final AttivitaServizioRepository attivita;
     private final UtenteCorrente utenteCorrente;
 
     public RichiestaController(
@@ -34,16 +35,19 @@ public class RichiestaController {
             CategoriaServizioRepository categorie,
             IncaricoRepository incarichi,
             ProfiloFornitoreRepository profili,
+            AttivitaServizioRepository attivita,
             UtenteCorrente utenteCorrente) {
         this.richieste = richieste;
         this.categorie = categorie;
         this.incarichi = incarichi;
         this.profili = profili;
+        this.attivita = attivita;
         this.utenteCorrente = utenteCorrente;
     }
 
     public record RichiestaNuova(
             @NotNull Long categoriaId,
+            Long attivitaId,
             Long fornitoreId,
             @NotBlank String titolo,
             @NotBlank String descrizione,
@@ -60,6 +64,7 @@ public class RichiestaController {
             LocalDate dataPreferita,
             StatoRichiesta stato,
             String categoria,
+            String attivita,
             String cliente,
             String fornitoreRichiesto,
             LocalDateTime dataCreazione) {
@@ -74,6 +79,7 @@ public class RichiestaController {
                     richiesta.getDataPreferita(),
                     richiesta.getStato(),
                     richiesta.getCategoria().getNome(),
+                    richiesta.getAttivita() == null ? null : richiesta.getAttivita().getNome(),
                     richiesta.getCliente().getNomeCompleto(),
                     richiesta.getFornitoreRichiesto() == null
                             ? null
@@ -100,6 +106,16 @@ public class RichiestaController {
         richiesta.setCitta(nuova.citta());
         richiesta.setBudget(nuova.budget());
         richiesta.setDataPreferita(nuova.dataPreferita());
+        if (nuova.attivitaId() != null) {
+            AttivitaServizio scelta = attivita
+                    .findById(nuova.attivitaId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attività non trovata"));
+            if (!scelta.getCategoria().getId().equals(categoria.getId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "L'attività non appartiene alla categoria scelta");
+            }
+            richiesta.setAttivita(scelta);
+        }
         return RispostaRichiesta.da(richieste.save(richiesta));
     }
 

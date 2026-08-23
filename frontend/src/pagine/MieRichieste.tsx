@@ -138,7 +138,7 @@ export default function MieRichieste() {
                   {r.budget != null ? `Budget ${r.budget} €` : "Preventivo da concordare"}
                 </span>
                 <span className="rounded-full border border-bordo px-3 py-2 text-xs font-semibold">
-                  {r.categoria}
+                  {r.attivita ?? r.categoria}
                 </span>
               </div>
 

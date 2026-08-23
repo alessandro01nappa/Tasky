@@ -4,9 +4,11 @@ import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import {
+  attivitaDiCategoria,
   categorie,
   creaRichiesta,
   elencoLavoratori,
+  type Attivita,
   type Categoria,
   type Lavoratore,
 } from "../lib/api";
@@ -22,6 +24,8 @@ export default function NuovaRichiesta() {
   const [prenotato, setPrenotato] = useState<Lavoratore | null>(null);
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [categoriaId, setCategoriaId] = useState<number | null>(null);
+  const [attivita, setAttivita] = useState<Attivita[]>([]);
+  const [attivitaId, setAttivitaId] = useState<number | null>(null);
   const [titolo, setTitolo] = useState("");
   const [descrizione, setDescrizione] = useState("");
   const [citta, setCitta] = useState("");
@@ -45,6 +49,16 @@ export default function NuovaRichiesta() {
       .catch(() => setPrenotato(null));
   }, [fornitoreId]);
 
+  // cambiando categoria ricarico i lavori concreti che contiene
+  useEffect(() => {
+    setAttivita([]);
+    setAttivitaId(null);
+    if (categoriaId === null) return;
+    attivitaDiCategoria(categoriaId)
+      .then(setAttivita)
+      .catch(() => setAttivita([]));
+  }, [categoriaId]);
+
   const completo = [
     categoriaId !== null && titolo.trim() !== "",
     descrizione.trim() !== "" && citta.trim() !== "",
@@ -58,6 +72,7 @@ export default function NuovaRichiesta() {
     try {
       const creata = await creaRichiesta({
         categoriaId: categoriaId!,
+        ...(attivitaId ? { attivitaId } : {}),
         ...(prenotato ? { fornitoreId: prenotato.id } : {}),
         titolo,
         descrizione,
@@ -111,19 +126,8 @@ export default function NuovaRichiesta() {
 
       {passo === 0 && (
         <div className="mt-5 flex flex-col gap-3 rounded-3xl border border-bordo bg-white p-5 shadow-morbida">
-          <label htmlFor="titolo" className="text-sm font-semibold text-fumo">
-            Titolo richiesta
-          </label>
-          <input
-            id="titolo"
-            value={titolo}
-            onChange={(e) => setTitolo(e.target.value)}
-            placeholder="Potatura siepe e pulizia giardino"
-            className="h-11 rounded-2xl border border-bordo px-4 outline-none"
-          />
-
-          <p className="mt-2 text-sm font-semibold text-fumo">Categoria</p>
-          <div className="grid grid-cols-4 gap-3">
+          <p className="text-sm font-semibold text-fumo">Categoria</p>
+          <div className="grid grid-cols-3 gap-3">
             {elencoCategorie.map((c) => (
               <button
                 key={c.id}
@@ -140,10 +144,49 @@ export default function NuovaRichiesta() {
                 >
                   <IconaCategoria nome={c.nome} className="size-6" />
                 </span>
-                <span className="mt-1.5 block text-xs font-medium text-fumo">{c.nome}</span>
+                <span className="mt-1.5 block text-xs font-medium break-words text-fumo">
+                  {c.nome}
+                </span>
               </button>
             ))}
           </div>
+
+          {attivita.length > 0 && (
+            <>
+              <p className="mt-2 text-sm font-semibold text-fumo">Che lavoro ti serve?</p>
+              <div className="flex flex-wrap gap-2">
+                {attivita.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => {
+                      setAttivitaId(a.id);
+                      // il titolo parte dal lavoro scelto, resta modificabile
+                      if (!titolo.trim()) setTitolo(a.nome);
+                    }}
+                    className={`h-9 rounded-full border px-4 text-sm font-semibold ${
+                      attivitaId === a.id
+                        ? "border-corallo bg-corallo text-white"
+                        : "border-bordo bg-white text-fumo"
+                    }`}
+                  >
+                    {a.nome}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <label htmlFor="titolo" className="mt-2 text-sm font-semibold text-fumo">
+            Titolo richiesta
+          </label>
+          <input
+            id="titolo"
+            value={titolo}
+            onChange={(e) => setTitolo(e.target.value)}
+            placeholder="Rubinetto della cucina che perde"
+            className="h-11 rounded-2xl border border-bordo px-4 outline-none"
+          />
         </div>
       )}
 
@@ -225,8 +268,9 @@ export default function NuovaRichiesta() {
             <p className="text-sm font-semibold text-fumo">Riepilogo</p>
             <p className="mt-2 text-base font-semibold">{titolo}</p>
             <p className="mt-1 text-sm text-fumo">
-              {elencoCategorie.find((c) => c.id === categoriaId)?.nome} • {citta} •{" "}
-              {preventivo || !budget ? "preventivo da concordare" : `${budget} €`}
+              {attivita.find((a) => a.id === attivitaId)?.nome ??
+                elencoCategorie.find((c) => c.id === categoriaId)?.nome}{" "}
+              • {citta} • {preventivo || !budget ? "preventivo da concordare" : `${budget} €`}
             </p>
           </div>
         </>

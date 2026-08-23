@@ -140,8 +140,8 @@ export default function DettaglioRichiesta() {
           <p className="mt-1 text-xs text-fumo">Budget</p>
         </div>
         <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
-          <p className="text-base font-semibold">{dati.categoria}</p>
-          <p className="mt-1 text-xs text-fumo">Categoria</p>
+          <p className="text-base font-semibold">{dati.attivita ?? dati.categoria}</p>
+          <p className="mt-1 text-xs text-fumo">{dati.attivita ? "Lavoro" : "Categoria"}</p>
         </div>
         <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
           <p className="text-base font-semibold">
