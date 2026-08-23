@@ -19,7 +19,7 @@ public class CategoriaController {
         this.attivita = attivita;
     }
 
-    public record VoceAttivita(Long id, String nome) {}
+    public record VoceAttivita(Long id, String nome, Long categoriaId) {}
 
     @GetMapping
     public List<CategoriaServizio> elenco() {
@@ -30,7 +30,7 @@ public class CategoriaController {
     @GetMapping("/{id}/attivita")
     public List<VoceAttivita> attivitaDella(@PathVariable Long id) {
         return attivita.findByCategoriaIdOrderByNome(id).stream()
-                .map(a -> new VoceAttivita(a.getId(), a.getNome()))
+                .map(a -> new VoceAttivita(a.getId(), a.getNome(), a.getCategoria().getId()))
                 .toList();
     }
 }

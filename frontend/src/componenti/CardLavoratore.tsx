@@ -38,8 +38,8 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
         </div>
 
         <div className="shrink-0 text-right">
-          {lavoratore.tariffaOraria != null && (
-            <p className="text-base font-bold">€{lavoratore.tariffaOraria}/h</p>
+          {lavoratore.tariffaMinima != null && (
+            <p className="text-base font-bold">da €{lavoratore.tariffaMinima}/h</p>
           )}
           <p className="text-xs font-medium text-fumo">{lavoratore.zonaOperativa}</p>
         </div>

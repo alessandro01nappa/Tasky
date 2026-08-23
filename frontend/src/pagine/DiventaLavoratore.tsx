@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import TariffaCategoria from "../componenti/TariffaCategoria";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RiquadroInfo from "../componenti/RiquadroInfo";
@@ -24,7 +25,8 @@ export default function DiventaLavoratore() {
   // i lavori scelti, con il nome accanto per poterli mostrare senza ricaricare
   const [scelte, setScelte] = useState<Attivita[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
-  const [tariffa, setTariffa] = useState("");
+  // una tariffa per categoria, indicizzata sull'id della categoria
+  const [tariffe, setTariffe] = useState<Record<number, string>>({});
   const [termini, setTermini] = useState(false);
   const [descrizione, setDescrizione] = useState("");
   const [zonaOperativa, setZonaOperativa] = useState("");
@@ -42,7 +44,9 @@ export default function DiventaLavoratore() {
     setDescrizione(profilo.descrizione);
     setZonaOperativa(profilo.zonaOperativa);
     setTipo(profilo.tipo);
-    setTariffa(profilo.tariffaOraria != null ? String(profilo.tariffaOraria) : "");
+    setTariffe(
+      Object.fromEntries(profilo.tariffe.map((t) => [t.categoriaId, String(t.tariffaOraria)])),
+    );
     setTermini(profilo.terminiAccettati);
   }, [profilo]);
 
@@ -72,9 +76,14 @@ export default function DiventaLavoratore() {
     );
   }
 
+  // le categorie coperte derivano dai lavori scelti, come fa il backend
+  const categorieCoperte = elencoCategorie.filter((c) =>
+    scelte.some((a) => a.categoriaId === c.id),
+  );
+
   // le stesse condizioni che il backend usa per approvare
   const mancanti = [
-    tariffa ? null : "la tariffa oraria",
+    categorieCoperte.every((c) => tariffe[c.id]) ? null : "una tariffa per ogni categoria",
     scelte.length > 0 ? null : "almeno un lavoro",
     termini ? null : "l'accettazione dei termini",
   ].filter((x): x is string => x !== null);
@@ -89,7 +98,9 @@ export default function DiventaLavoratore() {
         zonaOperativa,
         attivitaIds: scelte.map((a) => a.id),
         tipo,
-        tariffaOraria: tariffa ? Number(tariffa) : null,
+        tariffe: categorieCoperte
+          .filter((c) => tariffe[c.id])
+          .map((c) => ({ categoriaId: c.id, tariffaOraria: Number(tariffe[c.id]) })),
         terminiAccettati: termini,
       };
       if (modifica) {
@@ -158,20 +169,6 @@ export default function DiventaLavoratore() {
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="tariffa" className="text-xs font-medium text-fumo">
-            Tariffa oraria €
-          </label>
-          <input
-            id="tariffa"
-            type="number"
-            min="0"
-            value={tariffa}
-            onChange={(e) => setTariffa(e.target.value)}
-            placeholder="32"
-            className="h-11 rounded-2xl border border-bordo px-4 text-sm outline-none"
-          />
-        </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="zona" className="text-xs font-medium text-fumo">
@@ -246,6 +243,23 @@ export default function DiventaLavoratore() {
             </div>
           )}
         </div>
+
+        {categorieCoperte.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-medium text-fumo">
+              Quanto chiedi, categoria per categoria
+            </span>
+            {categorieCoperte.map((c) => (
+              <TariffaCategoria
+                key={c.id}
+                categoriaId={c.id}
+                categoria={c.nome}
+                valore={tariffe[c.id] ?? ""}
+                onCambia={(v) => setTariffe((attuali) => ({ ...attuali, [c.id]: v }))}
+              />
+            ))}
+          </div>
+        )}
 
         <label className="flex items-center gap-2.5 text-sm text-fumo">
           <span className="relative flex size-5 shrink-0 items-center justify-center">

@@ -24,6 +24,7 @@ public class FornitoreController {
     private final ProfiloFornitoreRepository profili;
     private final CategoriaServizioRepository categorie;
     private final AttivitaServizioRepository attivita;
+    private final TariffaFornitoreRepository tariffe;
     private final CandidaturaRepository candidature;
     private final RecensioneRepository recensioni;
     private final UtenteCorrente utenteCorrente;
@@ -32,12 +33,14 @@ public class FornitoreController {
             ProfiloFornitoreRepository profili,
             CategoriaServizioRepository categorie,
             AttivitaServizioRepository attivita,
+            TariffaFornitoreRepository tariffe,
             CandidaturaRepository candidature,
             RecensioneRepository recensioni,
             UtenteCorrente utenteCorrente) {
         this.profili = profili;
         this.categorie = categorie;
         this.attivita = attivita;
+        this.tariffe = tariffe;
         this.candidature = candidature;
         this.recensioni = recensioni;
         this.utenteCorrente = utenteCorrente;
@@ -49,8 +52,10 @@ public class FornitoreController {
             List<Long> categorieIds,
             List<Long> attivitaIds,
             TipoLavoratore tipo,
-            BigDecimal tariffaOraria,
+            List<TariffaCategoria> tariffe,
             Boolean terminiAccettati) {}
+
+    public record TariffaCategoria(Long categoriaId, BigDecimal tariffaOraria) {}
 
     public record RispostaFornitore(
             Long id,
@@ -58,21 +63,21 @@ public class FornitoreController {
             String zonaOperativa,
             StatoFornitore stato,
             TipoLavoratore tipo,
-            BigDecimal tariffaOraria,
+            List<VoceTariffa> tariffe,
             boolean terminiAccettati,
             List<String> categorie,
             List<String> attivita,
             LocalDateTime dataCreazione,
             LocalDateTime dataApprovazione) {
 
-        static RispostaFornitore da(ProfiloFornitore profilo) {
+        static RispostaFornitore da(ProfiloFornitore profilo, List<VoceTariffa> tariffe) {
             return new RispostaFornitore(
                     profilo.getId(),
                     profilo.getDescrizione(),
                     profilo.getZonaOperativa(),
                     profilo.getStato(),
                     profilo.getTipo(),
-                    profilo.getTariffaOraria(),
+                    tariffe,
                     profilo.isTerminiAccettati(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
@@ -118,11 +123,16 @@ public class FornitoreController {
             String descrizione,
             String zonaOperativa,
             TipoLavoratore tipo,
-            BigDecimal tariffaOraria,
+            BigDecimal tariffaMinima,
             List<String> categorie,
             List<String> attivita,
             double media,
             int numeroRecensioni) {}
+
+    public record VoceTariffa(Long categoriaId, String categoria, BigDecimal tariffaOraria) {}
+
+    /** Quanto chiedono gli altri per la stessa categoria, per farsi un'idea del prezzo. */
+    public record TariffeDiMercato(int quanti, BigDecimal media, BigDecimal minima, BigDecimal massima) {}
 
     public record VoceRecensione(int voto, String commento, LocalDateTime dataCreazione) {}
 
@@ -137,19 +147,22 @@ public class FornitoreController {
         ProfiloFornitore profilo = new ProfiloFornitore();
         profilo.setUtente(utente);
         applica(dati, profilo);
-        return RispostaFornitore.da(profili.save(profilo));
+        profili.save(profilo);
+        return concludi(dati, profilo);
     }
 
     @GetMapping
     public RispostaFornitore mio(@AuthenticationPrincipal Jwt token) {
-        return RispostaFornitore.da(profiloMio(token));
+        ProfiloFornitore profilo = profiloMio(token);
+        return RispostaFornitore.da(profilo, vociTariffa(profilo));
     }
 
     @PutMapping
     public RispostaFornitore aggiorna(@Valid @RequestBody DatiFornitore dati, @AuthenticationPrincipal Jwt token) {
         ProfiloFornitore profilo = profiloMio(token);
         applica(dati, profilo);
-        return RispostaFornitore.da(profili.save(profilo));
+        profili.save(profilo);
+        return concludi(dati, profilo);
     }
 
     @GetMapping("/candidature")
@@ -172,7 +185,10 @@ public class FornitoreController {
                             profilo.getDescrizione(),
                             profilo.getZonaOperativa(),
                             profilo.getTipo(),
-                            profilo.getTariffaOraria(),
+                            tariffe.findByProfiloFornitoreId(profilo.getId()).stream()
+                                    .map(TariffaFornitore::getTariffaOraria)
+                                    .min(BigDecimal::compareTo)
+                                    .orElse(null),
                             profilo.getCategorie().stream()
                                     .map(CategoriaServizio::getNome)
                                     .toList(),
@@ -184,6 +200,23 @@ public class FornitoreController {
                             ricevute.size());
                 })
                 .toList();
+    }
+
+    /** Quanto chiedono gli altri lavoratori approvati per questa categoria. */
+    @GetMapping("/tariffe/{categoriaId}")
+    public TariffeDiMercato tariffeDiMercato(@PathVariable Long categoriaId) {
+        List<BigDecimal> prezzi = tariffe
+                .findByCategoriaIdAndProfiloFornitoreStato(categoriaId, StatoFornitore.APPROVATO)
+                .stream()
+                .map(TariffaFornitore::getTariffaOraria)
+                .sorted()
+                .toList();
+        if (prezzi.isEmpty()) {
+            return new TariffeDiMercato(0, null, null, null);
+        }
+        BigDecimal somma = prezzi.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal media = somma.divide(BigDecimal.valueOf(prezzi.size()), 2, java.math.RoundingMode.HALF_UP);
+        return new TariffeDiMercato(prezzi.size(), media, prezzi.get(0), prezzi.get(prezzi.size() - 1));
     }
 
     @GetMapping("/{id}/recensioni")
@@ -199,13 +232,61 @@ public class FornitoreController {
         return new RecensioniFornitore(Math.round(media * 10) / 10.0, ricevute.size(), voci);
     }
 
+    /** Le tariffe si salvano dopo il profilo, perché servono l'id e le categorie già calcolate. */
+    private RispostaFornitore concludi(DatiFornitore dati, ProfiloFornitore profilo) {
+        salvaTariffe(dati, profilo);
+        aggiornaApprovazione(profilo);
+        profili.save(profilo);
+        return RispostaFornitore.da(profilo, vociTariffa(profilo));
+    }
+
+    private List<VoceTariffa> vociTariffa(ProfiloFornitore profilo) {
+        return tariffe.findByProfiloFornitoreId(profilo.getId()).stream()
+                .map(t -> new VoceTariffa(
+                        t.getCategoria().getId(), t.getCategoria().getNome(), t.getTariffaOraria()))
+                .sorted(java.util.Comparator.comparing(VoceTariffa::categoria))
+                .toList();
+    }
+
+    /** Serve una tariffa per ogni categoria che il lavoratore copre. */
+    private boolean tariffeComplete(ProfiloFornitore profilo) {
+        if (profilo.getId() == null) {
+            return false;
+        }
+        List<Long> coperte = tariffe.findByProfiloFornitoreId(profilo.getId()).stream()
+                .map(t -> t.getCategoria().getId())
+                .toList();
+        return profilo.getCategorie().stream().allMatch(c -> coperte.contains(c.getId()));
+    }
+
+    /** Riscrive le tariffe tenendo solo le categorie effettivamente coperte. */
+    private void salvaTariffe(DatiFornitore dati, ProfiloFornitore profilo) {
+        List<Long> categorieCoperte =
+                profilo.getCategorie().stream().map(CategoriaServizio::getId).toList();
+        tariffe.deleteAll(tariffe.findByProfiloFornitoreId(profilo.getId()));
+        if (dati.tariffe() == null) {
+            return;
+        }
+        for (TariffaCategoria voce : dati.tariffe()) {
+            if (voce.tariffaOraria() == null || !categorieCoperte.contains(voce.categoriaId())) {
+                continue;
+            }
+            CategoriaServizio categoria = categorie
+                    .findById(voce.categoriaId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria non trovata"));
+            TariffaFornitore riga = new TariffaFornitore();
+            riga.setProfiloFornitore(profilo);
+            riga.setCategoria(categoria);
+            riga.setTariffaOraria(voce.tariffaOraria());
+            tariffe.save(riga);
+        }
+    }
+
     private void applica(DatiFornitore dati, ProfiloFornitore profilo) {
         profilo.setDescrizione(dati.descrizione());
         profilo.setZonaOperativa(dati.zonaOperativa());
         profilo.setTipo(dati.tipo() == null ? TipoLavoratore.PROFESSIONISTA : dati.tipo());
-        profilo.setTariffaOraria(dati.tariffaOraria());
         profilo.setTerminiAccettati(Boolean.TRUE.equals(dati.terminiAccettati()));
-        aggiornaApprovazione(profilo);
         if (dati.attivitaIds() != null && !dati.attivitaIds().isEmpty()) {
             List<AttivitaServizio> scelte = attivitaRichieste(dati.attivitaIds());
             profilo.getAttivita().clear();
@@ -226,8 +307,8 @@ public class FornitoreController {
      */
     private void aggiornaApprovazione(ProfiloFornitore profilo) {
         boolean completo = profilo.isTerminiAccettati()
-                && profilo.getTariffaOraria() != null
-                && !profilo.getCategorie().isEmpty();
+                && !profilo.getCategorie().isEmpty()
+                && tariffeComplete(profilo);
 
         if (completo && profilo.getStato() != StatoFornitore.APPROVATO) {
             profilo.setStato(StatoFornitore.APPROVATO);

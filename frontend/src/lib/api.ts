@@ -13,6 +13,7 @@ export type Categoria = {
 export type Attivita = {
   id: number;
   nome: string;
+  categoriaId: number;
 };
 
 export type Richiesta = {
@@ -73,7 +74,7 @@ export type Fornitore = {
   zonaOperativa: string;
   stato: "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
   tipo: TipoLavoratore;
-  tariffaOraria: number | null;
+  tariffe: { categoriaId: number; categoria: string; tariffaOraria: number }[];
   terminiAccettati: boolean;
   categorie: string[];
   attivita: string[];
@@ -87,7 +88,7 @@ export type Lavoratore = {
   descrizione: string;
   zonaOperativa: string;
   tipo: TipoLavoratore;
-  tariffaOraria: number | null;
+  tariffaMinima: number | null;
   categorie: string[];
   attivita: string[];
   media: number;
@@ -236,6 +237,17 @@ export function recensioniLavoratore(id: number) {
   return chiama<RecensioniLavoratore>(`/api/fornitore/${id}/recensioni`);
 }
 
+export type TariffeDiMercato = {
+  quanti: number;
+  media: number | null;
+  minima: number | null;
+  massima: number | null;
+};
+
+export function tariffeDiMercato(categoriaId: number) {
+  return chiama<TariffeDiMercato>(`/api/fornitore/tariffe/${categoriaId}`);
+}
+
 export function mioProfiloFornitore() {
   return chiama<Fornitore>("/api/fornitore");
 }
@@ -245,7 +257,7 @@ export function creaProfiloFornitore(dati: {
   zonaOperativa: string;
   attivitaIds: number[];
   tipo: TipoLavoratore;
-  tariffaOraria: number | null;
+  tariffe: { categoriaId: number; tariffaOraria: number }[];
   terminiAccettati: boolean;
 }) {
   return invia<Fornitore>("/api/fornitore", "POST", dati);
@@ -256,7 +268,7 @@ export function aggiornaProfiloFornitore(dati: {
   zonaOperativa: string;
   attivitaIds: number[];
   tipo: TipoLavoratore;
-  tariffaOraria: number | null;
+  tariffe: { categoriaId: number; tariffaOraria: number }[];
   terminiAccettati: boolean;
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);

@@ -44,6 +44,10 @@ class FlussoCompletoTest {
         jdbc.update("delete from incarichi where richiesta_id in (" + richiesteDiTest + ")");
         jdbc.update("delete from candidature where richiesta_id in (" + richiesteDiTest + ")");
         jdbc.update("delete from richieste_servizio where cliente_id in (" + UTENTI_DI_TEST + ")");
+        jdbc.update("delete from tariffe_fornitore where profilo_fornitore_id in "
+                + "(select id from profili_fornitore where utente_id in (" + UTENTI_DI_TEST + "))");
+        jdbc.update("delete from attivita_fornitore where profilo_fornitore_id in "
+                + "(select id from profili_fornitore where utente_id in (" + UTENTI_DI_TEST + "))");
         jdbc.update("delete from categorie_fornitore where profilo_fornitore_id in "
                 + "(select id from profili_fornitore where utente_id in (" + UTENTI_DI_TEST + "))");
         jdbc.update("delete from profili_fornitore where utente_id in (" + UTENTI_DI_TEST + ")");

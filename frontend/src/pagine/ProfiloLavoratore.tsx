@@ -104,10 +104,10 @@ export default function ProfiloLavoratore() {
                 : `${lavoratore.numeroRecensioni} recensioni`}
             </p>
           </div>
-          {lavoratore.tariffaOraria != null && (
+          {lavoratore.tariffaMinima != null && (
             <div className="flex flex-1 flex-col gap-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
-              <p className="text-lg font-semibold">€{lavoratore.tariffaOraria}/h</p>
-              <p className="text-xs text-fumo">Tariffa oraria</p>
+              <p className="text-lg font-semibold">da €{lavoratore.tariffaMinima}/h</p>
+              <p className="text-xs text-fumo">Tariffa</p>
             </div>
           )}
         </div>
