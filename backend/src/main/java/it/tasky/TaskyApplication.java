@@ -23,18 +23,17 @@ public class TaskyApplication {
                     "Montaggi mobili",
                     "Traslochi e trasporti",
                     "Manutenzioni e riparazioni",
-                    "Assistenza pratica",
                     "Idraulica",
                     "Elettricista",
                     "Imbianchino",
                     "Falegnameria",
                     "Sgomberi e smaltimento",
                     "Informatica e tecnologia",
-                    "Spesa e commissioni",
                     "Cura animali",
-                    "Assistenza anziani",
                     "Baby sitting",
-                    "Lezioni private");
+                    "Riparazione elettrodomestici",
+                    "Piastrelle e pavimenti",
+                    "Camini e canne fumarie");
             for (String nome : nomi) {
                 if (categorie.existsByNome(nome)) {
                     continue;
