@@ -45,7 +45,12 @@ export default function TrovaLavori() {
         <div className="mt-4 flex gap-2">
           <button
             type="button"
-            onClick={() => setSoloMie(true)}
+            onClick={() => {
+              setSoloMie(true);
+              if (filtro && mieCategorie.length > 0 && !mieCategorie.includes(filtro)) {
+                impostaParametri({});
+              }
+            }}
             className={`rounded-full px-3 py-2 text-xs font-semibold ${
               soloMie ? "bg-verde text-white" : "border border-bordo bg-white text-fumo"
             }`}
@@ -67,6 +72,8 @@ export default function TrovaLavori() {
       <div className="mt-4 flex flex-wrap gap-2">
         {elencoCategorie
           .filter((c) => richieste.some((r) => r.categoria === c.nome))
+          // fuori dalle proprie categorie non ci si può candidare: non le propongo
+          .filter((c) => !soloMie || mieCategorie.length === 0 || mieCategorie.includes(c.nome))
           .map((c) => {
             const attiva = filtro === c.nome;
             return (
