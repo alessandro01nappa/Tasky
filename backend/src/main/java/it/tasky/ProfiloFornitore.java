@@ -34,6 +34,11 @@ public class ProfiloFornitore {
 
     private String zonaOperativa;
 
+    /** Il punto della zona operativa, per misurare quanto dista un lavoro. Non si mostra. */
+    private Double latitudine;
+
+    private Double longitudine;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatoFornitore stato = StatoFornitore.IN_ATTESA;
@@ -86,6 +91,22 @@ public class ProfiloFornitore {
 
     public String getZonaOperativa() {
         return zonaOperativa;
+    }
+
+    public Double getLatitudine() {
+        return latitudine;
+    }
+
+    public void setLatitudine(Double latitudine) {
+        this.latitudine = latitudine;
+    }
+
+    public Double getLongitudine() {
+        return longitudine;
+    }
+
+    public void setLongitudine(Double longitudine) {
+        this.longitudine = longitudine;
     }
 
     public void setZonaOperativa(String zonaOperativa) {

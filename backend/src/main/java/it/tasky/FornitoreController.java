@@ -28,6 +28,7 @@ public class FornitoreController {
     private final CandidaturaRepository candidature;
     private final RecensioneRepository recensioni;
     private final UtenteCorrente utenteCorrente;
+    private final Geocodifica geocodifica;
 
     public FornitoreController(
             ProfiloFornitoreRepository profili,
@@ -36,7 +37,8 @@ public class FornitoreController {
             TariffaFornitoreRepository tariffe,
             CandidaturaRepository candidature,
             RecensioneRepository recensioni,
-            UtenteCorrente utenteCorrente) {
+            UtenteCorrente utenteCorrente,
+            Geocodifica geocodifica) {
         this.profili = profili;
         this.categorie = categorie;
         this.attivita = attivita;
@@ -44,6 +46,7 @@ public class FornitoreController {
         this.candidature = candidature;
         this.recensioni = recensioni;
         this.utenteCorrente = utenteCorrente;
+        this.geocodifica = geocodifica;
     }
 
     public record DatiFornitore(
@@ -285,6 +288,11 @@ public class FornitoreController {
     private void applica(DatiFornitore dati, ProfiloFornitore profilo) {
         profilo.setDescrizione(dati.descrizione());
         profilo.setZonaOperativa(dati.zonaOperativa());
+        // la zona serve anche come punto di partenza per misurare quanto dista un lavoro
+        geocodifica.cerca(dati.zonaOperativa()).ifPresent(punto -> {
+            profilo.setLatitudine(punto.latitudine());
+            profilo.setLongitudine(punto.longitudine());
+        });
         profilo.setTipo(dati.tipo() == null ? TipoLavoratore.PROFESSIONISTA : dati.tipo());
         profilo.setTerminiAccettati(Boolean.TRUE.equals(dati.terminiAccettati()));
         if (dati.attivitaIds() != null && !dati.attivitaIds().isEmpty()) {

@@ -43,6 +43,14 @@ public class RichiestaServizio {
     @Column(nullable = false, length = 120)
     private String citta;
 
+    /** L'indirizzo scritto dal cliente. Lo vedono solo lui e chi prende il lavoro. */
+    @Column(length = 300)
+    private String indirizzo;
+
+    private Double latitudine;
+
+    private Double longitudine;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal budget;
 
@@ -108,6 +116,30 @@ public class RichiestaServizio {
 
     public void setCitta(String citta) {
         this.citta = citta;
+    }
+
+    public String getIndirizzo() {
+        return indirizzo;
+    }
+
+    public void setIndirizzo(String indirizzo) {
+        this.indirizzo = indirizzo;
+    }
+
+    public Double getLatitudine() {
+        return latitudine;
+    }
+
+    public void setLatitudine(Double latitudine) {
+        this.latitudine = latitudine;
+    }
+
+    public Double getLongitudine() {
+        return longitudine;
+    }
+
+    public void setLongitudine(Double longitudine) {
+        this.longitudine = longitudine;
     }
 
     public BigDecimal getBudget() {

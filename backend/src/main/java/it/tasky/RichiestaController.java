@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,6 +30,7 @@ public class RichiestaController {
     private final ProfiloFornitoreRepository profili;
     private final AttivitaServizioRepository attivita;
     private final UtenteCorrente utenteCorrente;
+    private final Geocodifica geocodifica;
 
     public RichiestaController(
             RichiestaServizioRepository richieste,
@@ -36,13 +38,15 @@ public class RichiestaController {
             IncaricoRepository incarichi,
             ProfiloFornitoreRepository profili,
             AttivitaServizioRepository attivita,
-            UtenteCorrente utenteCorrente) {
+            UtenteCorrente utenteCorrente,
+            Geocodifica geocodifica) {
         this.richieste = richieste;
         this.categorie = categorie;
         this.incarichi = incarichi;
         this.profili = profili;
         this.attivita = attivita;
         this.utenteCorrente = utenteCorrente;
+        this.geocodifica = geocodifica;
     }
 
     public record RichiestaNuova(
@@ -52,6 +56,7 @@ public class RichiestaController {
             @NotBlank String titolo,
             @NotBlank String descrizione,
             @NotBlank String citta,
+            String indirizzo,
             BigDecimal budget,
             LocalDate dataPreferita) {}
 
@@ -60,6 +65,10 @@ public class RichiestaController {
             String titolo,
             String descrizione,
             String citta,
+            String indirizzo,
+            Double latitudine,
+            Double longitudine,
+            Double distanzaKm,
             BigDecimal budget,
             LocalDate dataPreferita,
             StatoRichiesta stato,
@@ -69,12 +78,31 @@ public class RichiestaController {
             String fornitoreRichiesto,
             LocalDateTime dataCreazione) {
 
+        /** Per chi la richiesta riguarda: via, civico e punto esatto. */
         static RispostaRichiesta da(RichiestaServizio richiesta) {
+            return costruisci(richiesta, true, null);
+        }
+
+        /**
+         * Per chi sta solo guardando l'elenco. Un annuncio aperto lo vede ogni
+         * lavoratore approvato, quindi via e civico restano fuori e il punto sulla
+         * mappa e' arrotondato a circa un chilometro.
+         */
+        static RispostaRichiesta pubblica(RichiestaServizio richiesta, ProfiloFornitore chiGuarda) {
+            return costruisci(richiesta, false, chiGuarda);
+        }
+
+        private static RispostaRichiesta costruisci(
+                RichiestaServizio richiesta, boolean perIntero, ProfiloFornitore chiGuarda) {
             return new RispostaRichiesta(
                     richiesta.getId(),
                     richiesta.getTitolo(),
                     richiesta.getDescrizione(),
                     richiesta.getCitta(),
+                    perIntero ? richiesta.getIndirizzo() : null,
+                    perIntero ? richiesta.getLatitudine() : approssima(richiesta.getLatitudine()),
+                    perIntero ? richiesta.getLongitudine() : approssima(richiesta.getLongitudine()),
+                    distanza(richiesta, chiGuarda),
                     richiesta.getBudget(),
                     richiesta.getDataPreferita(),
                     richiesta.getStato(),
@@ -85,6 +113,24 @@ public class RichiestaController {
                             ? null
                             : richiesta.getFornitoreRichiesto().getUtente().getNomeCompleto(),
                     richiesta.getDataCreazione());
+        }
+
+        private static Double approssima(Double grado) {
+            return grado == null ? null : Math.round(grado * 100) / 100.0;
+        }
+
+        private static Double distanza(RichiestaServizio richiesta, ProfiloFornitore chiGuarda) {
+            if (chiGuarda == null
+                    || chiGuarda.getLatitudine() == null
+                    || richiesta.getLatitudine() == null) {
+                return null;
+            }
+            double km = Distanze.km(
+                    chiGuarda.getLatitudine(),
+                    chiGuarda.getLongitudine(),
+                    richiesta.getLatitudine(),
+                    richiesta.getLongitudine());
+            return Math.round(km * 10) / 10.0;
         }
     }
 
@@ -104,6 +150,13 @@ public class RichiestaController {
         richiesta.setTitolo(nuova.titolo());
         richiesta.setDescrizione(nuova.descrizione());
         richiesta.setCitta(nuova.citta());
+        richiesta.setIndirizzo(nuova.indirizzo());
+        // se l'indirizzo non si trova la richiesta esiste lo stesso, semplicemente non finisce sulla mappa
+        geocodifica.cerca(nuova.indirizzo() == null ? null : nuova.indirizzo() + ", " + nuova.citta())
+                .ifPresent(punto -> {
+                    richiesta.setLatitudine(punto.latitudine());
+                    richiesta.setLongitudine(punto.longitudine());
+                });
         richiesta.setBudget(nuova.budget());
         richiesta.setDataPreferita(nuova.dataPreferita());
         if (nuova.attivitaId() != null) {
@@ -120,9 +173,15 @@ public class RichiestaController {
     }
 
     @GetMapping
-    public List<RispostaRichiesta> aperte() {
+    public List<RispostaRichiesta> aperte(
+            @RequestParam(required = false) Double entroKm, @AuthenticationPrincipal Jwt token) {
+        ProfiloFornitore chiGuarda = profili
+                .findByUtenteId(utenteCorrente.da(token).getId())
+                .orElse(null);
         return richieste.findByStatoAndFornitoreRichiestoIsNull(StatoRichiesta.APERTA).stream()
-                .map(RispostaRichiesta::da)
+                .map(richiesta -> RispostaRichiesta.pubblica(richiesta, chiGuarda))
+                .filter(risposta -> entroKm == null
+                        || (risposta.distanzaKm() != null && risposta.distanzaKm() <= entroKm))
                 .toList();
     }
 
@@ -131,7 +190,7 @@ public class RichiestaController {
     public List<RispostaRichiesta> dirette(@AuthenticationPrincipal Jwt token) {
         ProfiloFornitore profilo = profiloMio(token);
         return richieste.findByFornitoreRichiestoIdAndStato(profilo.getId(), StatoRichiesta.APERTA).stream()
-                .map(RispostaRichiesta::da)
+                .map(richiesta -> RispostaRichiesta.pubblica(richiesta, profilo))
                 .toList();
     }
 
@@ -157,7 +216,7 @@ public class RichiestaController {
     public RispostaRichiesta rifiuta(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
         RichiestaServizio richiesta = prenotazioneDiretta(id, token);
         richiesta.setFornitoreRichiesto(null);
-        return RispostaRichiesta.da(richieste.save(richiesta));
+        return RispostaRichiesta.pubblica(richieste.save(richiesta), null);
     }
 
     private ProfiloFornitore lavoratorePrenotabile(Long fornitoreId, Utente cliente) {
@@ -207,12 +266,17 @@ public class RichiestaController {
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
 
+        Utente chiChiede = utenteCorrente.da(token);
+        boolean suo = riguarda(richiesta, chiChiede.getId());
         // una richiesta non piu' aperta esiste solo per chi la sta portando avanti
-        if (richiesta.getStato() != StatoRichiesta.APERTA
-                && !riguarda(richiesta, utenteCorrente.da(token).getId())) {
+        if (richiesta.getStato() != StatoRichiesta.APERTA && !suo) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata");
         }
-        return RispostaRichiesta.da(richiesta);
+        // finche' e' aperta la puo' aprire chiunque per candidarsi: l'indirizzo resta coperto
+        return suo
+                ? RispostaRichiesta.da(richiesta)
+                : RispostaRichiesta.pubblica(
+                        richiesta, profili.findByUtenteId(chiChiede.getId()).orElse(null));
     }
 
     private boolean riguarda(RichiestaServizio richiesta, Long utenteId) {
