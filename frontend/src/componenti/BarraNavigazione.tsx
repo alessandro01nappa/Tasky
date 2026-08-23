@@ -1,7 +1,6 @@
 import { Compass, LayoutDashboard, ClipboardList, Search, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useProfiloLavoratore } from "../lib/lavoratore";
-import { useModalita } from "../lib/modalita";
+import { useSonoLavoratore } from "../lib/lavoratore";
 
 const CLIENTE = [
   { etichetta: "Esplora", percorso: "/", Icona: Compass },
@@ -17,11 +16,8 @@ const LAVORATORE = [
 
 export default function BarraNavigazione() {
   const { pathname } = useLocation();
-  const profilo = useProfiloLavoratore();
-  const modalita = useModalita();
-
   // il design cambia solo accento ed etichette: verde quando lavori, corallo quando cerchi
-  const lavoratore = modalita === "lavoratore" && profilo?.stato === "APPROVATO";
+  const lavoratore = useSonoLavoratore();
   const voci = lavoratore ? LAVORATORE : CLIENTE;
   const accento = lavoratore ? "text-verde" : "text-corallo";
 

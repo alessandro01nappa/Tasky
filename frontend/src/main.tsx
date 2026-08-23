@@ -2,8 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RottaProtetta from "./componenti/RottaProtetta";
-import { useProfiloLavoratore } from "./lib/lavoratore";
-import { useModalita } from "./lib/modalita";
+import { useSonoLavoratore } from "./lib/lavoratore";
 import Accesso from "./pagine/Accesso";
 import Categorie from "./pagine/Categorie";
 import DashboardLavoratore from "./pagine/DashboardLavoratore";
@@ -23,9 +22,7 @@ import "./index.css";
 
 /** La radice mostra la home giusta: chi lavora vede gli annunci, chi cerca vede le persone. */
 function Home() {
-  const profilo = useProfiloLavoratore();
-  const modalita = useModalita();
-  return modalita === "lavoratore" && profilo?.stato === "APPROVATO" ? <TrovaLavori /> : <Esplora />;
+  return useSonoLavoratore() ? <TrovaLavori /> : <Esplora />;
 }
 
 createRoot(document.getElementById("root")!).render(
