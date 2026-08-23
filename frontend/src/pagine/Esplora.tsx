@@ -1,51 +1,59 @@
-import { useEffect, useState } from "react";
 import { LayoutGrid } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
-import Pagina from "../componenti/Pagina";
-import CardRichiesta from "../componenti/CardRichiesta";
+import CardLavoratore from "../componenti/CardLavoratore";
 import IconaCategoria from "../componenti/IconaCategoria";
+import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import ScheletroHome from "../componenti/ScheletroHome";
-import CardLavoratore from "../componenti/CardLavoratore";
 import {
   categorie,
   elencoLavoratori,
-  richiesteAperte,
   type Categoria,
   type Lavoratore,
-  type Richiesta,
+  type TipoLavoratore,
 } from "../lib/api";
 
+const TIPI = [
+  { valore: "PROFESSIONISTA", etichetta: "Professionisti" },
+  { valore: "HOBBISTA", etichetta: "Hobbisti" },
+] as const;
+
+/** La home di chi cerca: categorie e persone, mai gli annunci degli altri. */
 export default function Esplora() {
-  const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
-  const [richieste, setRichieste] = useState<Richiesta[]>([]);
   const [parametri, impostaParametri] = useSearchParams();
   const filtro = parametri.get("categoria");
-  const [suggeriti, setSuggeriti] = useState<Lavoratore[]>([]);
+  const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
+  const [lavoratori, setLavoratori] = useState<Lavoratore[]>([]);
+  const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
   useEffect(() => {
-    Promise.all([categorie(), richiesteAperte()])
-      .then(([c, r]) => {
+    Promise.all([categorie(), elencoLavoratori()])
+      .then(([c, l]) => {
         setElencoCategorie(c);
-        setRichieste(r);
+        setLavoratori(l);
       })
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
-    // la colonna dei suggeriti compare solo da tablet in su
-    elencoLavoratori()
-      .then((tutti) => setSuggeriti(tutti.slice(0, 2)))
-      .catch(() => setSuggeriti([]));
   }, []);
 
-  const visibili = filtro ? richieste.filter((r) => r.categoria === filtro) : richieste;
+  const migliori = useMemo(
+    () =>
+      lavoratori
+        .filter((l) => l.tipo === tipo)
+        .filter((l) => !filtro || l.categorie.includes(filtro))
+        .sort((a, b) => b.media - a.media)
+        .slice(0, 3),
+    [lavoratori, tipo, filtro],
+  );
 
   return (
     <Pagina larga>
       <h1 className="text-3xl font-bold">Cosa ti serve oggi?</h1>
-      <p className="mt-1 text-sm font-medium text-fumo">Richieste aperte vicino a te</p>
+      <p className="mt-1 text-sm font-medium text-fumo">Trova la persona giusta vicino a te</p>
 
       {!caricato && <ScheletroHome />}
 
@@ -77,7 +85,9 @@ export default function Esplora() {
                   <button
                     key={categoria.id}
                     type="button"
-                    onClick={() => impostaParametri(attiva ? {} : { categoria: categoria.nome })}
+                    onClick={() =>
+                      impostaParametri(attiva ? {} : { categoria: categoria.nome })
+                    }
                     className="text-left"
                   >
                     <span
@@ -106,43 +116,55 @@ export default function Esplora() {
               <LayoutGrid className="size-5" strokeWidth={2} />
               Esplora tutte le categorie
             </Link>
+          </div>
 
-            <h2 className="mt-8 text-lg font-semibold">
-              {filtro ?? "Tutte le richieste"}
-              <span className="ml-2 text-sm font-medium text-fumo">{visibili.length}</span>
+          <aside className="mt-8 lg:mt-0">
+            <h2 className="text-lg font-semibold">
+              {filtro ? `I migliori per ${filtro}` : "I migliori in zona"}
             </h2>
 
-            <div className="mt-3 flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {visibili.map((r) => (
-                <CardRichiesta key={r.id} richiesta={r} />
+            <div className="mt-3 flex gap-2">
+              {TIPI.map((voce) => (
+                <button
+                  key={voce.valore}
+                  type="button"
+                  onClick={() => setTipo(voce.valore)}
+                  className={`h-10 rounded-full border border-bordo px-5 text-sm font-semibold shadow-morbida ${
+                    tipo === voce.valore ? "bg-corallo text-white" : "bg-white text-fumo"
+                  }`}
+                >
+                  {voce.etichetta}
+                </button>
               ))}
             </div>
 
-            {visibili.length === 0 && (
-              <div className="mt-3">
+            <div className="mt-3.5 flex flex-col gap-3.5 md:grid md:grid-cols-2 lg:grid-cols-1">
+              {migliori.map((l) => (
+                <CardLavoratore key={l.id} lavoratore={l} />
+              ))}
+            </div>
+
+            {migliori.length === 0 && (
+              <div className="mt-3.5">
                 <RiquadroInfo>
                   {filtro
-                    ? "Nessuna richiesta aperta in questa categoria."
-                    : "Non ci sono richieste aperte. Creane una tu."}
+                    ? `Nessun ${tipo === "PROFESSIONISTA" ? "professionista" : "hobbista"} per ${filtro}.`
+                    : "Nessuno disponibile in questa modalità per ora."}
                 </RiquadroInfo>
               </div>
             )}
 
-            {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
-          </div>
-
-          {suggeriti.length > 0 && (
-            <aside className="mt-8 lg:mt-0">
-              <h2 className="text-lg font-semibold">Suggeriti per te</h2>
-              <div className="mt-3 flex flex-col gap-3.5 md:grid md:grid-cols-2 lg:grid-cols-1">
-                {suggeriti.map((l) => (
-                  <CardLavoratore key={l.id} lavoratore={l} />
-                ))}
-              </div>
-            </aside>
-          )}
+            <Link
+              to="/professionisti"
+              className="mt-3.5 flex h-12 items-center justify-center rounded-2xl border border-bordo bg-white text-sm font-semibold"
+            >
+              Vedi tutti gli esperti
+            </Link>
+          </aside>
         </div>
       )}
+
+      {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
 
       <BarraNavigazione />
     </Pagina>

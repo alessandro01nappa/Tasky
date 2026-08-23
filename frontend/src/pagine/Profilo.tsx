@@ -1,157 +1,190 @@
+import { Briefcase, ClipboardList, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
-import {
-  io,
-  mieCandidature,
-  mieiIncarichi,
-  mioProfiloFornitore,
-  type Fornitore,
-  type Incarico,
-  type MiaCandidatura,
-} from "../lib/api";
-import { scordaProfiloLavoratore } from "../lib/lavoratore";
+import RiquadroInfo from "../componenti/RiquadroInfo";
+import { io, mieiIncarichi, type Incarico, type Io } from "../lib/api";
+import { scordaProfiloLavoratore, useProfiloLavoratore } from "../lib/lavoratore";
+import { cancellaModalita, salvaModalita, useModalita } from "../lib/modalita";
 import { cancellaToken } from "../lib/sessione";
 
 const STATO_LAVORATORE: Record<string, string> = {
-  IN_ATTESA: "In attesa di approvazione",
-  APPROVATO: "Approvato",
-  RIFIUTATO: "Non approvato",
+  IN_ATTESA: "In attesa",
+  APPROVATO: "Attivo",
+  RIFIUTATO: "Non attivo",
 };
 
 export default function Profilo() {
   const navigate = useNavigate();
-  const [emailUtente, setEmailUtente] = useState("");
-  const [profilo, setProfilo] = useState<Fornitore | null>(null);
-  const [candidature, setCandidature] = useState<MiaCandidatura[]>([]);
+  const profilo = useProfiloLavoratore();
+  const modalita = useModalita();
+  const [utente, setUtente] = useState<Io | null>(null);
   const [incarichi, setIncarichi] = useState<Incarico[]>([]);
   const [errore, setErrore] = useState("");
 
   useEffect(() => {
-    io().then(setEmailUtente).catch(() => {});
-    mieiIncarichi().then(setIncarichi).catch(() => {});
-    // chi non ha un profilo lavoratore riceve un errore: qui vuol dire solo "non ce l'hai"
-    mioProfiloFornitore().then(setProfilo).catch(() => setProfilo(null));
-    mieCandidature().then(setCandidature).catch(() => setCandidature([]));
+    io()
+      .then(setUtente)
+      .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
+    mieiIncarichi()
+      .then(setIncarichi)
+      .catch(() => setIncarichi([]));
   }, []);
 
   function esci() {
     scordaProfiloLavoratore();
+    cancellaModalita();
     cancellaToken();
     navigate("/accesso");
   }
 
+  const attivo = profilo?.stato === "APPROVATO";
+  const inLavoratore = modalita === "lavoratore" && attivo;
+  const iniziali = (utente?.nomeCompleto ?? "?")
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <Pagina>
       <h1 className="text-3xl font-bold">Profilo</h1>
-      <p className="mt-1 text-sm font-medium text-fumo">{emailUtente || "…"}</p>
 
-      {profilo ? (
-        <div className="mt-5 rounded-3xl border border-bordo bg-white p-5">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-base font-semibold">Profilo lavoratore</p>
-            <span
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                profilo.stato === "APPROVATO" ? "bg-verde-chiaro text-verde" : "bg-miele text-ambra"
-              }`}
-            >
-              {STATO_LAVORATORE[profilo.stato]}
-            </span>
-          </div>
-          <p className="mt-1.5 text-sm text-fumo">
-            {profilo.tipo === "HOBBISTA" ? "Hobbista" : "Professionista"} • {profilo.zonaOperativa}
-          </p>
-          <p className="mt-2 text-sm">{profilo.descrizione}</p>
-          {profilo.categorie.length > 0 && (
-            <p className="mt-2 text-sm text-fumo">{profilo.categorie.join(" • ")}</p>
-          )}
-          {profilo.stato === "IN_ATTESA" && (
-            <p className="mt-3 text-sm text-fumo">
-              Per candidarti completa il profilo: serve la tariffa oraria, almeno una categoria e
-              l'accettazione dei termini.
-            </p>
-          )}
-          <Link
-            to="/diventa-lavoratore"
-            className="mt-4 flex h-12 items-center justify-center rounded-2xl border border-bordo text-sm font-semibold"
-          >
-            Modifica profilo lavoratore
-          </Link>
-        </div>
-      ) : (
-        <Link
-          to="/diventa-lavoratore"
-          className="mt-5 block rounded-3xl border border-bordo bg-white p-5"
+      <div className="mt-5 flex items-center gap-4">
+        <span
+          className={`flex size-15 shrink-0 items-center justify-center rounded-full text-lg font-semibold ${
+            inLavoratore ? "bg-verde-chiaro text-verde" : "bg-pesca text-corallo"
+          }`}
         >
-          <p className="text-base font-semibold">Diventa lavoratore</p>
-          <p className="mt-1.5 text-sm text-fumo">
-            Crea il tuo profilo per candidarti alle richieste degli altri utenti.
+          {iniziali}
+        </span>
+        <div className="min-w-0">
+          <p className="text-lg font-semibold">{utente?.nomeCompleto ?? "…"}</p>
+          <p className="mt-1 text-sm text-fumo">
+            {utente?.email}
+            {utente?.citta && ` • ${utente.citta}`}
           </p>
-        </Link>
-      )}
-
-      <Link
-        to="/richieste"
-        className="mt-5 block rounded-3xl border border-bordo bg-white p-5"
-      >
-        <p className="text-base font-semibold">Le mie richieste</p>
-        <p className="mt-1.5 text-sm text-fumo">Quelle che hai pubblicato tu.</p>
-      </Link>
-
-      <h2 className="mt-8 text-lg font-semibold">
-        I miei incarichi
-        <span className="ml-2 text-sm font-medium text-fumo">{incarichi.length}</span>
-      </h2>
-      <div className="mt-3 flex flex-col gap-3">
-        {incarichi.map((i) => (
-          <Link
-            key={i.id}
-            to={`/incarichi/${i.id}`}
-            className="block rounded-3xl border border-bordo bg-white p-5"
+          <span
+            className={`mt-1.5 inline-block rounded-full px-2.5 py-1.5 text-xs font-medium ${
+              inLavoratore ? "bg-verde-chiaro text-verde" : "bg-pesca text-corallo"
+            }`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-base font-semibold">{i.titoloRichiesta}</p>
-              <span className="shrink-0 rounded-full bg-sabbia px-3 py-1 text-xs font-semibold text-fumo">
-                {i.stato.toLowerCase().replace("_", " ")}
-              </span>
-            </div>
-            <p className="mt-1.5 text-sm text-fumo">
-              {i.ruolo === "CLIENTE" ? `Lavoratore: ${i.fornitore}` : "Sei tu il lavoratore"}
-              {i.prezzoConcordato != null && ` • ${i.prezzoConcordato} €`}
-            </p>
-          </Link>
-        ))}
-        {incarichi.length === 0 && <p className="text-sm text-fumo">Nessun incarico attivo.</p>}
+            Modalità {inLavoratore ? "Lavoratore" : "Cliente"}
+          </span>
+        </div>
       </div>
 
-      {candidature.length > 0 && (
-        <>
-          <h2 className="mt-8 text-lg font-semibold">
-            Le mie candidature
-            <span className="ml-2 text-sm font-medium text-fumo">{candidature.length}</span>
-          </h2>
-          <div className="mt-3 flex flex-col gap-3">
-            {candidature.map((c) => (
-              <Link
-                key={c.id}
-                to={`/richieste/${c.richiestaId}`}
-                className="block rounded-3xl border border-bordo bg-white p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-base font-semibold">{c.titoloRichiesta}</p>
-                  <span className="shrink-0 rounded-full bg-sabbia px-3 py-1 text-xs font-semibold text-fumo">
-                    {c.stato.toLowerCase().replace("_", " ")}
-                  </span>
-                </div>
-                {c.prezzoOfferto != null && (
-                  <p className="mt-1.5 text-sm text-fumo">Offerti {c.prezzoOfferto} €</p>
-                )}
-              </Link>
-            ))}
-          </div>
-        </>
+      <div className="mt-5 rounded-3xl border border-bordo bg-white p-4">
+        <p className="text-lg font-semibold">
+          {inLavoratore ? "Torna alla modalità Cliente" : "Passa alla modalità Lavoratore"}
+        </p>
+        <p className="mt-2 text-sm text-fumo">
+          {inLavoratore
+            ? "Come cliente cerchi esperti e pubblichi richieste."
+            : "Come lavoratore vedi gli annunci in zona e ti candidi."}
+        </p>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-fumo">
+            {profilo ? STATO_LAVORATORE[profilo.stato] : "Non attiva"}
+          </span>
+
+          {attivo ? (
+            <button
+              type="button"
+              onClick={() => salvaModalita(inLavoratore ? "cliente" : "lavoratore")}
+              aria-label="Cambia modalità"
+              className={`h-8 w-14 rounded-full p-1 transition-colors ${
+                inLavoratore ? "bg-verde" : "bg-bordo"
+              }`}
+            >
+              <span
+                className={`block size-6 rounded-full bg-white transition-transform ${
+                  inLavoratore ? "translate-x-6" : ""
+                }`}
+              />
+            </button>
+          ) : (
+            <Link
+              to="/diventa-lavoratore"
+              className="flex h-10 items-center rounded-2xl bg-corallo px-4 text-sm font-semibold text-white"
+            >
+              {profilo ? "Completa il profilo" : "Attiva"}
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {profilo?.stato === "IN_ATTESA" && (
+        <div className="mt-3">
+          <RiquadroInfo>
+            Per lavorare completa il profilo: servono i lavori che svolgi, una tariffa per ogni
+            categoria e l'accettazione dei termini.
+          </RiquadroInfo>
+        </div>
       )}
+
+      <h2 className="mt-8 text-lg font-semibold">Le tue cose</h2>
+      <div className="mt-3 flex flex-col gap-3">
+        <Link
+          to="/richieste"
+          className="flex items-center gap-3.5 rounded-3xl border border-bordo bg-white p-4"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pesca text-corallo">
+            <ClipboardList className="size-5" strokeWidth={1.75} />
+          </span>
+          <span>
+            <span className="block font-semibold">Le mie richieste</span>
+            <span className="block text-sm text-fumo">Annunci pubblicati e candidature ricevute</span>
+          </span>
+        </Link>
+
+        {profilo && (
+          <Link
+            to="/diventa-lavoratore"
+            className="flex items-center gap-3.5 rounded-3xl border border-bordo bg-white p-4"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-verde-chiaro text-verde">
+              <User className="size-5" strokeWidth={1.75} />
+            </span>
+            <span>
+              <span className="block font-semibold">Profilo lavoratore</span>
+              <span className="block text-sm text-fumo">
+                {profilo.attivita.length > 0
+                  ? `${profilo.attivita.length} lavori • ${profilo.zonaOperativa}`
+                  : profilo.zonaOperativa}
+              </span>
+            </span>
+          </Link>
+        )}
+
+        {incarichi.length > 0 && (
+          <div className="rounded-3xl border border-bordo bg-white p-4">
+            <div className="flex items-center gap-3.5">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-miele text-ambra">
+                <Briefcase className="size-5" strokeWidth={1.75} />
+              </span>
+              <p className="font-semibold">I miei incarichi</p>
+            </div>
+            <div className="mt-3 flex flex-col gap-2">
+              {incarichi.map((i) => (
+                <Link
+                  key={i.id}
+                  to={`/incarichi/${i.id}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-bordo px-3.5 py-3"
+                >
+                  <span className="min-w-0 truncate text-sm font-semibold">{i.titoloRichiesta}</span>
+                  <span className="shrink-0 rounded-full bg-sabbia px-2.5 py-1 text-xs font-semibold text-fumo">
+                    {i.stato.toLowerCase().replace("_", " ")}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}
 

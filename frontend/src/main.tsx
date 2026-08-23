@@ -2,6 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RottaProtetta from "./componenti/RottaProtetta";
+import { useProfiloLavoratore } from "./lib/lavoratore";
+import { useModalita } from "./lib/modalita";
 import Accesso from "./pagine/Accesso";
 import Categorie from "./pagine/Categorie";
 import DashboardLavoratore from "./pagine/DashboardLavoratore";
@@ -9,6 +11,7 @@ import DettaglioIncarico from "./pagine/DettaglioIncarico";
 import DettaglioRichiesta from "./pagine/DettaglioRichiesta";
 import ElencoProfessionisti from "./pagine/ElencoProfessionisti";
 import Esplora from "./pagine/Esplora";
+import TrovaLavori from "./pagine/TrovaLavori";
 import MieRichieste from "./pagine/MieRichieste";
 import NuovaRichiesta from "./pagine/NuovaRichiesta";
 import DiventaLavoratore from "./pagine/DiventaLavoratore";
@@ -17,6 +20,13 @@ import Profilo from "./pagine/Profilo";
 import ProfiloLavoratore from "./pagine/ProfiloLavoratore";
 import Registrazione from "./pagine/Registrazione";
 import "./index.css";
+
+/** La radice mostra la home giusta: chi lavora vede gli annunci, chi cerca vede le persone. */
+function Home() {
+  const profilo = useProfiloLavoratore();
+  const modalita = useModalita();
+  return modalita === "lavoratore" && profilo?.stato === "APPROVATO" ? <TrovaLavori /> : <Esplora />;
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -36,7 +46,7 @@ createRoot(document.getElementById("root")!).render(
           path="/"
           element={
             <RottaProtetta>
-              <Esplora />
+              <Home />
             </RottaProtetta>
           }
         />

@@ -54,6 +54,8 @@ public class AutenticazioneController {
 
     public record RispostaToken(String token) {}
 
+    public record Io(String email, String nomeCompleto, String citta) {}
+
     @PostMapping("/registrazione")
     public RispostaToken registrazione(@Valid @RequestBody RegistrazioneRichiesta richiesta) {
         if (utenti.findByEmail(richiesta.email()).isPresent()) {
@@ -78,8 +80,11 @@ public class AutenticazioneController {
     }
 
     @GetMapping("/io")
-    public String io(@AuthenticationPrincipal Jwt token) {
-        return token.getSubject();
+    public Io io(@AuthenticationPrincipal Jwt token) {
+        Utente utente = utenti
+                .findByEmail(token.getSubject())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+        return new Io(utente.getEmail(), utente.getNomeCompleto(), utente.getCitta());
     }
 
     private String creaToken(Utente utente) {

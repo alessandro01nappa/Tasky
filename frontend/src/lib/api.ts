@@ -161,9 +161,14 @@ export function login(dati: { email: string; password: string }) {
   return invia<{ token: string }>("/api/login", "POST", dati);
 }
 
-// restituisce l'email dell'utente del token
+export type Io = {
+  email: string;
+  nomeCompleto: string;
+  citta: string | null;
+};
+
 export function io() {
-  return chiama<string>("/api/io");
+  return chiama<Io>("/api/io");
 }
 
 export function categorie() {
