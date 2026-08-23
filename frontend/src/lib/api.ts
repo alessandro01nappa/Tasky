@@ -68,6 +68,7 @@ export type Fornitore = {
   stato: "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
+  terminiAccettati: boolean;
   categorie: string[];
   dataCreazione: string;
   dataApprovazione: string | null;
@@ -232,6 +233,7 @@ export function creaProfiloFornitore(dati: {
   categorieIds: number[];
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
+  terminiAccettati: boolean;
 }) {
   return invia<Fornitore>("/api/fornitore", "POST", dati);
 }
@@ -242,6 +244,7 @@ export function aggiornaProfiloFornitore(dati: {
   categorieIds: number[];
   tipo: TipoLavoratore;
   tariffaOraria: number | null;
+  terminiAccettati: boolean;
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);
 }

@@ -68,9 +68,16 @@ export default function Profilo() {
           )}
           {profilo.stato === "IN_ATTESA" && (
             <p className="mt-3 text-sm text-fumo">
-              Potrai candidarti alle richieste quando il profilo sarà approvato.
+              Per candidarti completa il profilo: serve la tariffa oraria, almeno una categoria e
+              l'accettazione dei termini.
             </p>
           )}
+          <Link
+            to="/diventa-lavoratore"
+            className="mt-4 flex h-12 items-center justify-center rounded-2xl border border-bordo text-sm font-semibold"
+          >
+            Modifica profilo lavoratore
+          </Link>
         </div>
       ) : (
         <Link

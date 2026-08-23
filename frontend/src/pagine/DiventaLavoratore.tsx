@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RiquadroInfo from "../componenti/RiquadroInfo";
@@ -19,6 +20,7 @@ export default function DiventaLavoratore() {
   const [scelte, setScelte] = useState<number[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
   const [tariffa, setTariffa] = useState("");
+  const [termini, setTermini] = useState(false);
   const [descrizione, setDescrizione] = useState("");
   const [zonaOperativa, setZonaOperativa] = useState("");
   const [errore, setErrore] = useState("");
@@ -36,6 +38,7 @@ export default function DiventaLavoratore() {
     setZonaOperativa(profilo.zonaOperativa);
     setTipo(profilo.tipo);
     setTariffa(profilo.tariffaOraria != null ? String(profilo.tariffaOraria) : "");
+    setTermini(profilo.terminiAccettati);
   }, [profilo]);
 
   // il profilo salva i nomi delle categorie, il form lavora sugli id
@@ -52,6 +55,13 @@ export default function DiventaLavoratore() {
     );
   }
 
+  // le stesse condizioni che il backend usa per approvare
+  const mancanti = [
+    tariffa ? null : "la tariffa oraria",
+    scelte.length > 0 ? null : "almeno una categoria",
+    termini ? null : "l'accettazione dei termini",
+  ].filter((x): x is string => x !== null);
+
   async function invia(evento: React.FormEvent) {
     evento.preventDefault();
     setErrore("");
@@ -63,6 +73,7 @@ export default function DiventaLavoratore() {
         categorieIds: scelte,
         tipo,
         tariffaOraria: tariffa ? Number(tariffa) : null,
+        terminiAccettati: termini,
       };
       if (modifica) {
         await aggiornaProfiloFornitore(dati);
@@ -179,6 +190,21 @@ export default function DiventaLavoratore() {
           </div>
         </div>
 
+        <label className="flex items-center gap-2.5 text-sm text-fumo">
+          <span className="relative flex size-5 shrink-0 items-center justify-center">
+            <input
+              type="checkbox"
+              checked={termini}
+              onChange={(e) => setTermini(e.target.checked)}
+              className="size-5 appearance-none rounded-md border border-bordo bg-white checked:border-verde checked:bg-verde"
+            />
+            {termini && (
+              <Check className="pointer-events-none absolute size-3.5 text-white" strokeWidth={3} />
+            )}
+          </span>
+          Accetto termini e condizioni del servizio.
+        </label>
+
         <button
           type="submit"
           disabled={inCorso}
@@ -198,14 +224,18 @@ export default function DiventaLavoratore() {
         {errore && <p className="text-sm text-red-600">{errore}</p>}
       </form>
 
-      {!modifica && (
-        <div className="mt-5">
+      <div className="mt-5">
+        {mancanti.length === 0 ? (
           <RiquadroInfo>
-            L'approvazione oggi è manuale: dopo l'invio il profilo resta in attesa finché non viene
-            approvato.
+            Il profilo è completo: appena salvi potrai candidarti alle richieste.
           </RiquadroInfo>
-        </div>
-      )}
+        ) : (
+          <RiquadroInfo>
+            Per candidarti serve ancora: {mancanti.join(", ")}. Finché manca qualcosa il profilo
+            resta in attesa.
+          </RiquadroInfo>
+        )}
+      </div>
     </Pagina>
   );
 }

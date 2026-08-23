@@ -46,6 +46,9 @@ public class ProfiloFornitore {
     @Column(precision = 10, scale = 2)
     private BigDecimal tariffaOraria;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean terminiAccettati = false;
+
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
     private LocalDateTime dataApprovazione;
@@ -107,6 +110,14 @@ public class ProfiloFornitore {
 
     public void setTariffaOraria(BigDecimal tariffaOraria) {
         this.tariffaOraria = tariffaOraria;
+    }
+
+    public boolean isTerminiAccettati() {
+        return terminiAccettati;
+    }
+
+    public void setTerminiAccettati(boolean terminiAccettati) {
+        this.terminiAccettati = terminiAccettati;
     }
 
     public LocalDateTime getDataCreazione() {

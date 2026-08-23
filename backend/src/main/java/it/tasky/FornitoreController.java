@@ -45,7 +45,8 @@ public class FornitoreController {
             @NotBlank String zonaOperativa,
             List<Long> categorieIds,
             TipoLavoratore tipo,
-            BigDecimal tariffaOraria) {}
+            BigDecimal tariffaOraria,
+            Boolean terminiAccettati) {}
 
     public record RispostaFornitore(
             Long id,
@@ -54,6 +55,7 @@ public class FornitoreController {
             StatoFornitore stato,
             TipoLavoratore tipo,
             BigDecimal tariffaOraria,
+            boolean terminiAccettati,
             List<String> categorie,
             LocalDateTime dataCreazione,
             LocalDateTime dataApprovazione) {
@@ -66,6 +68,7 @@ public class FornitoreController {
                     profilo.getStato(),
                     profilo.getTipo(),
                     profilo.getTariffaOraria(),
+                    profilo.isTerminiAccettati(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
                             .toList(),
@@ -187,8 +190,28 @@ public class FornitoreController {
         profilo.setZonaOperativa(dati.zonaOperativa());
         profilo.setTipo(dati.tipo() == null ? TipoLavoratore.PROFESSIONISTA : dati.tipo());
         profilo.setTariffaOraria(dati.tariffaOraria());
+        profilo.setTerminiAccettati(Boolean.TRUE.equals(dati.terminiAccettati()));
+        aggiornaApprovazione(profilo);
         profilo.getCategorie().clear();
         profilo.getCategorie().addAll(categorieRichieste(dati.categorieIds()));
+    }
+
+    /**
+     * La verifica si completa da sola: il profilo è approvato quando ha tutto il necessario
+     * per candidarsi. Se qualcosa viene tolto, torna in attesa.
+     */
+    private void aggiornaApprovazione(ProfiloFornitore profilo) {
+        boolean completo = profilo.isTerminiAccettati()
+                && profilo.getTariffaOraria() != null
+                && !profilo.getCategorie().isEmpty();
+
+        if (completo && profilo.getStato() != StatoFornitore.APPROVATO) {
+            profilo.setStato(StatoFornitore.APPROVATO);
+            profilo.setDataApprovazione(LocalDateTime.now());
+        } else if (!completo && profilo.getStato() == StatoFornitore.APPROVATO) {
+            profilo.setStato(StatoFornitore.IN_ATTESA);
+            profilo.setDataApprovazione(null);
+        }
     }
 
     private List<CategoriaServizio> categorieRichieste(List<Long> ids) {
