@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RottaProtetta from "./componenti/RottaProtetta";
 import Accesso from "./pagine/Accesso";
+import Categorie from "./pagine/Categorie";
 import DashboardLavoratore from "./pagine/DashboardLavoratore";
 import DettaglioIncarico from "./pagine/DettaglioIncarico";
 import DettaglioRichiesta from "./pagine/DettaglioRichiesta";
@@ -44,6 +45,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <RottaProtetta>
               <DiventaLavoratore />
+            </RottaProtetta>
+          }
+        />
+        <Route
+          path="/categorie"
+          element={
+            <RottaProtetta>
+              <Categorie />
             </RottaProtetta>
           }
         />

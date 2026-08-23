@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { LayoutGrid } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
 import CardRichiesta from "../componenti/CardRichiesta";
@@ -19,7 +20,8 @@ import {
 export default function Esplora() {
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [richieste, setRichieste] = useState<Richiesta[]>([]);
-  const [filtro, setFiltro] = useState<string | null>(null);
+  const [parametri, impostaParametri] = useSearchParams();
+  const filtro = parametri.get("categoria");
   const [suggeriti, setSuggeriti] = useState<Lavoratore[]>([]);
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
@@ -51,31 +53,31 @@ export default function Esplora() {
         <div className="lg:grid lg:grid-cols-[1fr_380px] lg:items-start lg:gap-10">
           <div>
             <Link
-              to="/richieste/nuova"
+              to="/professionisti"
               className="mt-5 block rounded-3xl bg-corallo p-5 shadow-corallo"
             >
-              <p className="text-xl font-bold text-white">Crea un annuncio</p>
+              <p className="text-xl font-bold text-white">Sfoglia gli esperti in zona</p>
               <p className="mt-1 max-w-60 text-sm text-white">
-                Trova tu un esperto oppure lascia arrivare proposte
+                Scegli tu la persona e prenotala direttamente
               </p>
             </Link>
 
             <Link
-              to="/professionisti"
+              to="/richieste/nuova"
               className="mt-3.5 flex h-12 items-center justify-center rounded-2xl border border-bordo bg-white text-sm font-semibold shadow-morbida"
             >
-              Sfoglia gli esperti in zona
+              Crea un annuncio
             </Link>
 
             <h2 className="mt-8 text-lg font-semibold">Categorie</h2>
             <div className="mt-3 grid grid-cols-4 gap-4">
-              {elencoCategorie.map((categoria, indice) => {
+              {elencoCategorie.slice(0, 8).map((categoria, indice) => {
                 const attiva = filtro === categoria.nome;
                 return (
                   <button
                     key={categoria.id}
                     type="button"
-                    onClick={() => setFiltro(attiva ? null : categoria.nome)}
+                    onClick={() => impostaParametri(attiva ? {} : { categoria: categoria.nome })}
                     className="text-left"
                   >
                     <span
@@ -96,6 +98,14 @@ export default function Esplora() {
                 );
               })}
             </div>
+
+            <Link
+              to="/categorie"
+              className="mt-3.5 flex h-12 items-center justify-center gap-2 rounded-2xl border border-bordo bg-white text-sm font-semibold"
+            >
+              <LayoutGrid className="size-5" strokeWidth={2} />
+              Esplora tutte le categorie
+            </Link>
 
             <h2 className="mt-8 text-lg font-semibold">
               {filtro ?? "Tutte le richieste"}
