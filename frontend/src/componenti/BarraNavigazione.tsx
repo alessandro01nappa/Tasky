@@ -1,7 +1,7 @@
-import { ArrowLeftRight, Compass, LayoutDashboard, ClipboardList, Search, User } from "lucide-react";
+import { Compass, LayoutDashboard, ClipboardList, Search, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import InterruttoreModalita from "./InterruttoreModalita";
 import { useProfiloLavoratore, useSonoLavoratore } from "../lib/lavoratore";
-import { salvaModalita } from "../lib/modalita";
 
 const CLIENTE = [
   { etichetta: "Esplora", percorso: "/", Icona: Compass },
@@ -46,20 +46,7 @@ export default function BarraNavigazione() {
           );
         })}
 
-        {puoCambiare && (
-          <button
-            type="button"
-            onClick={() => salvaModalita(lavoratore ? "cliente" : "lavoratore")}
-            className={`flex w-20 flex-col items-center gap-1.5 md:w-auto md:flex-row md:gap-2 ${
-              lavoratore ? "text-corallo" : "text-verde"
-            }`}
-          >
-            <ArrowLeftRight className="size-6 md:size-5" strokeWidth={1.75} />
-            <span className="text-xs font-medium md:text-sm">
-              {lavoratore ? "Cliente" : "Lavoratore"}
-            </span>
-          </button>
-        )}
+        {puoCambiare && <InterruttoreModalita acceso={lavoratore} />}
       </div>
     </nav>
   );
