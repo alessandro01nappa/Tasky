@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
@@ -8,8 +9,10 @@ import {
   accettaRichiesta,
   mieCandidature,
   mieiIncarichi,
+  recensioniLavoratore,
   richiesteDirette,
   rifiutaRichiesta,
+  type RecensioniLavoratore,
   type Incarico,
   type MiaCandidatura,
   type Richiesta,
@@ -23,6 +26,7 @@ export default function DashboardLavoratore() {
   const [dirette, setDirette] = useState<Richiesta[]>([]);
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
+  const [recensioni, setRecensioni] = useState<RecensioniLavoratore | null>(null);
 
   useEffect(() => {
     mieiIncarichi()
@@ -36,6 +40,11 @@ export default function DashboardLavoratore() {
       .then(setDirette)
       .catch(() => setDirette([]));
   }, []);
+
+  useEffect(() => {
+    if (!profilo) return;
+    recensioniLavoratore(profilo.id).then(setRecensioni).catch(() => setRecensioni(null));
+  }, [profilo]);
 
   const inCorso = incarichi.filter((i) => i.stato !== "COMPLETATO");
   const concluse = incarichi.filter((i) => i.stato === "COMPLETATO");
@@ -66,11 +75,19 @@ export default function DashboardLavoratore() {
 
       {caricato && (
         <>
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               { etichetta: "In corso", valore: inCorso.length },
               { etichetta: "Completati", valore: concluse.length },
               { etichetta: "Candidature", valore: candidature.length },
+              {
+                etichetta:
+                  recensioni && recensioni.numero > 0
+                    ? `Su ${recensioni.numero} recension${recensioni.numero === 1 ? "e" : "i"}`
+                    : "Recensioni",
+                valore:
+                  recensioni && recensioni.numero > 0 ? recensioni.media.toFixed(1) : "—",
+              },
             ].map((dato) => (
               <div key={dato.etichetta} className="rounded-3xl border border-bordo bg-white p-4">
                 <p className="text-2xl font-bold">{dato.valore}</p>
@@ -166,6 +183,41 @@ export default function DashboardLavoratore() {
             ))}
             {candidature.length === 0 && (
               <p className="text-sm text-fumo">Nessuna candidatura inviata.</p>
+            )}
+          </div>
+
+          <h2 className="mt-8 text-lg font-semibold">
+            Recensioni ricevute
+            {recensioni && recensioni.numero > 0 && (
+              <span className="ml-2 text-sm font-medium text-fumo">{recensioni.numero}</span>
+            )}
+          </h2>
+          <div className="mt-3 flex flex-col gap-3">
+            {recensioni?.recensioni.map((r, indice) => (
+              <div key={indice} className="rounded-3xl border border-bordo bg-white p-5">
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((stella) => (
+                    <Star
+                      key={stella}
+                      className={`size-4 ${stella <= r.voto ? "fill-ambra text-ambra" : "text-bordo"}`}
+                      strokeWidth={1.75}
+                    />
+                  ))}
+                  <span className="ml-1 text-xs text-fumo">
+                    {new Date(r.dataCreazione).toLocaleDateString("it-IT", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                {r.commento && <p className="mt-2 text-sm">{r.commento}</p>}
+              </div>
+            ))}
+            {(!recensioni || recensioni.numero === 0) && (
+              <p className="text-sm text-fumo">
+                Nessuna recensione. Arrivano dai clienti quando chiudi un lavoro.
+              </p>
             )}
           </div>
         </>

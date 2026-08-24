@@ -2,8 +2,8 @@
 export default function ScheletroDashboard() {
   return (
     <div className="animate-pulse">
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        {[0, 1, 2].map((i) => (
+      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
           <div key={i} className="rounded-3xl border border-bordo bg-white p-4">
             <div className="h-6 w-10 rounded-full bg-sabbia" />
             <div className="mt-2 h-3 w-16 rounded-full bg-sabbia" />
