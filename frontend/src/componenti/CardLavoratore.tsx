@@ -41,7 +41,12 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
           {lavoratore.tariffaMinima != null && (
             <p className="text-base font-bold">da €{lavoratore.tariffaMinima}/h</p>
           )}
-          <p className="text-xs font-medium text-fumo">{lavoratore.zonaOperativa}</p>
+          <p className="text-xs font-medium text-fumo">
+            {lavoratore.zonaOperativa}
+            {lavoratore.distanzaKm !== null &&
+              lavoratore.distanzaKm >= 1 &&
+              ` • ${lavoratore.distanzaKm} km`}
+          </p>
         </div>
       </div>
 

@@ -14,6 +14,10 @@ import {
   type Lavoratore,
   type TipoLavoratore,
 } from "../lib/api";
+import { usePosizioneCliente } from "../lib/posizione";
+
+/** Oltre questa distanza "in zona" non vuol piu' dire niente. */
+const RAGGIO_ZONA_KM = 50;
 
 const TIPI = [
   { valore: "PROFESSIONISTA", etichetta: "Professionisti" },
@@ -22,6 +26,7 @@ const TIPI = [
 
 /** La home di chi cerca: categorie e persone, mai gli annunci degli altri. */
 export default function Esplora() {
+  const posizione = usePosizioneCliente();
   const [parametri, impostaParametri] = useSearchParams();
   const filtro = parametri.get("categoria");
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
@@ -31,24 +36,28 @@ export default function Esplora() {
   const [caricato, setCaricato] = useState(false);
 
   useEffect(() => {
-    Promise.all([categorie(), elencoLavoratori()])
-      .then(([c, l]) => {
-        setElencoCategorie(c);
-        setLavoratori(l);
-      })
-      .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
-      .finally(() => setCaricato(true));
+    categorie().then(setElencoCategorie).catch(() => setElencoCategorie([]));
   }, []);
 
-  const migliori = useMemo(
-    () =>
-      lavoratori
-        .filter((l) => l.tipo === tipo)
-        .filter((l) => !filtro || l.categorie.includes(filtro))
-        .sort((a, b) => b.media - a.media)
-        .slice(0, 3),
-    [lavoratori, tipo, filtro],
-  );
+  useEffect(() => {
+    if (posizione === undefined) return;
+    elencoLavoratori(posizione ?? undefined)
+      .then(setLavoratori)
+      .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
+      .finally(() => setCaricato(true));
+  }, [posizione]);
+
+  // i migliori vicini, se ce ne sono: altrimenti si allarga a tutti e il titolo lo dice
+  const { migliori, vicini } = useMemo(() => {
+    const adatti = lavoratori
+      .filter((l) => l.tipo === tipo)
+      .filter((l) => !filtro || l.categorie.includes(filtro));
+    const perVoto = (a: Lavoratore, b: Lavoratore) => b.media - a.media;
+    const dintorni = adatti.filter((l) => l.distanzaKm !== null && l.distanzaKm <= RAGGIO_ZONA_KM);
+    return dintorni.length > 0
+      ? { migliori: [...dintorni].sort(perVoto).slice(0, 3), vicini: true }
+      : { migliori: [...adatti].sort(perVoto).slice(0, 3), vicini: false };
+  }, [lavoratori, tipo, filtro]);
 
   return (
     <Pagina larga>
@@ -120,8 +129,17 @@ export default function Esplora() {
 
           <aside className="mt-8 lg:mt-0">
             <h2 className="text-lg font-semibold">
-              {filtro ? `I migliori per ${filtro}` : "I migliori in zona"}
+              {filtro
+                ? `I migliori per ${filtro}`
+                : vicini
+                  ? "I migliori in zona"
+                  : "I migliori su Tasky"}
             </h2>
+            {caricato && !vicini && migliori.length > 0 && (
+              <p className="mt-1 text-sm text-fumo">
+                Nessuno entro {RAGGIO_ZONA_KM} km da te: questi sono i migliori ovunque.
+              </p>
+            )}
 
             <div className="mt-3 flex gap-2">
               {TIPI.map((voce) => (

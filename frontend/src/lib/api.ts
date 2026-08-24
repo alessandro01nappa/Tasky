@@ -101,6 +101,8 @@ export type Lavoratore = {
   attivita: string[];
   media: number;
   numeroRecensioni: number;
+  /** Quanto dista dal punto indicato dal cliente, se ne ha indicato uno. */
+  distanzaKm: number | null;
 };
 
 export type Recensione = {
@@ -249,8 +251,20 @@ export function mieCandidature() {
   return chiama<MiaCandidatura[]>("/api/fornitore/candidature");
 }
 
-export function elencoLavoratori() {
-  return chiama<Lavoratore[]>("/api/fornitore/elenco");
+export function elencoLavoratori(vicinoA?: {
+  latitudine: number;
+  longitudine: number;
+  entroKm?: number;
+}) {
+  if (!vicinoA) {
+    return chiama<Lavoratore[]>("/api/fornitore/elenco");
+  }
+  const parametri = new URLSearchParams({
+    lat: String(vicinoA.latitudine),
+    lon: String(vicinoA.longitudine),
+  });
+  if (vicinoA.entroKm) parametri.set("entroKm", String(vicinoA.entroKm));
+  return chiama<Lavoratore[]>(`/api/fornitore/elenco?${parametri}`);
 }
 
 export type RecensioniLavoratore = {

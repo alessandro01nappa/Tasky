@@ -1,17 +1,24 @@
-import { Search, Users } from "lucide-react";
+import { MapPin, Search, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
 import CardLavoratore from "../componenti/CardLavoratore";
 import StatoVuoto from "../componenti/StatoVuoto";
-import { elencoLavoratori, type Lavoratore, type TipoLavoratore } from "../lib/api";
+import { cercaLuogo, elencoLavoratori, type Lavoratore, type Luogo, type TipoLavoratore } from "../lib/api";
+import { usePosizioneCliente } from "../lib/posizione";
 
 const TIPI = [
   { valore: "PROFESSIONISTA", etichetta: "Professionisti" },
   { valore: "HOBBISTA", etichetta: "Hobbisti" },
 ] as const;
 
+const RAGGI = [10, 25, 50, 100];
+
 export default function ElencoProfessionisti() {
+  const miaCitta = usePosizioneCliente();
+  const [dove, setDove] = useState<Luogo | null>(null);
+  const [testoDove, setTestoDove] = useState("");
+  const [entroKm, setEntroKm] = useState<number | null>(null);
   const [lavoratori, setLavoratori] = useState<Lavoratore[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
   const [cerca, setCerca] = useState("");
@@ -19,12 +26,32 @@ export default function ElencoProfessionisti() {
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
+  // si parte dalla città del profilo, poi il cliente può guardare altrove
   useEffect(() => {
-    elencoLavoratori()
+    if (miaCitta === undefined || dove !== null) return;
+    setDove(miaCitta);
+    setTestoDove(miaCitta?.citta ?? "");
+  }, [miaCitta, dove]);
+
+  useEffect(() => {
+    if (miaCitta === undefined) return;
+    elencoLavoratori(dove ? { ...dove, entroKm: entroKm ?? undefined } : undefined)
       .then(setLavoratori)
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
-  }, []);
+  }, [miaCitta, dove, entroKm]);
+
+  async function cambiaLuogo(testo: string) {
+    if (testo.trim() === "") {
+      setDove(null);
+      return;
+    }
+    try {
+      setDove(await cercaLuogo(testo));
+    } catch {
+      setDove(null);
+    }
+  }
 
   const visibili = useMemo(() => {
     const testo = cerca.trim().toLowerCase();
@@ -44,12 +71,49 @@ export default function ElencoProfessionisti() {
 
   return (
     <Pagina larga>
-      <h1 className="text-3xl font-bold">Esperti in zona</h1>
+      <h1 className="text-3xl font-bold">{dove ? "Esperti in zona" : "Tutti gli esperti"}</h1>
       <p className="mt-1 text-sm text-fumo">
-        {caricato
-          ? `${visibili.length} ${visibili.length === 1 ? "risultato" : "risultati"}`
-          : "Caricamento…"}
+        {!caricato
+          ? "Caricamento…"
+          : `${visibili.length} ${visibili.length === 1 ? "risultato" : "risultati"}` +
+            (dove
+              ? entroKm
+                ? ` entro ${entroKm} km da ${dove.citta ?? testoDove}`
+                : `, dal più vicino a ${dove.citta ?? testoDove}`
+              : "")}
       </p>
+
+      <div className="mt-3.5 flex flex-col gap-2.5 md:flex-row md:items-center">
+        <div className="flex h-12 flex-1 items-center gap-2 rounded-3xl border border-bordo bg-white px-4">
+          <MapPin className="size-5 shrink-0 text-fumo" strokeWidth={1.75} />
+          <input
+            value={testoDove}
+            onChange={(e) => setTestoDove(e.target.value)}
+            onBlur={(e) => cambiaLuogo(e.target.value)}
+            placeholder="Da dove cerchi? Roma, Milano…"
+            className="min-w-0 flex-1 text-sm outline-none"
+          />
+        </div>
+
+        {dove && (
+          <div className="flex flex-wrap gap-2">
+            {RAGGI.map((km) => (
+              <button
+                key={km}
+                type="button"
+                onClick={() => setEntroKm(entroKm === km ? null : km)}
+                className={`h-9 rounded-full border px-3.5 text-sm font-semibold ${
+                  entroKm === km
+                    ? "border-corallo bg-corallo text-white"
+                    : "border-bordo bg-white text-fumo"
+                }`}
+              >
+                {km} km
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="mt-3.5 flex h-12 items-center gap-2 rounded-3xl border border-bordo bg-white px-4 md:h-14">
         <Search className="size-5 shrink-0 text-fumo" strokeWidth={1.75} />

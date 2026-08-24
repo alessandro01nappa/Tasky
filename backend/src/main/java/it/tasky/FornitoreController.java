@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -136,7 +138,9 @@ public class FornitoreController {
             List<String> categorie,
             List<String> attivita,
             double media,
-            int numeroRecensioni) {}
+            int numeroRecensioni,
+            /** Quanto dista dal punto che sta guardando il cliente, se ne ha indicato uno. */
+            Double distanzaKm) {}
 
     public record VoceTariffa(Long categoriaId, String categoria, BigDecimal tariffaOraria) {}
 
@@ -185,8 +189,15 @@ public class FornitoreController {
                 .toList();
     }
 
+    /**
+     * Senza un punto di riferimento torna tutti; con latitudine e longitudine
+     * ognuno porta con se' la distanza, e con entroKm restano solo i vicini.
+     */
     @GetMapping("/elenco")
-    public List<VoceElenco> elenco() {
+    public List<VoceElenco> elenco(
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lon,
+            @RequestParam(required = false) Double entroKm) {
         return profili.findByStato(StatoFornitore.APPROVATO).stream()
                 .map(profilo -> {
                     List<Recensione> ricevute =
@@ -210,9 +221,22 @@ public class FornitoreController {
                                     .sorted()
                                     .toList(),
                             Math.round(media * 10) / 10.0,
-                            ricevute.size());
+                            ricevute.size(),
+                            distanzaDa(profilo, lat, lon));
                 })
+                .filter(voce -> entroKm == null
+                        || (voce.distanzaKm() != null && voce.distanzaKm() <= entroKm))
+                .sorted(Comparator.comparing(
+                        VoceElenco::distanzaKm, Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
+    }
+
+    private static Double distanzaDa(ProfiloFornitore profilo, Double lat, Double lon) {
+        if (lat == null || lon == null || profilo.getLatitudine() == null) {
+            return null;
+        }
+        double km = Distanze.km(lat, lon, profilo.getLatitudine(), profilo.getLongitudine());
+        return Math.round(km * 10) / 10.0;
     }
 
     /** Quanto chiedono gli altri lavoratori approvati per questa categoria. */
