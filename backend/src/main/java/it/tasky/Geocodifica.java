@@ -7,6 +7,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +46,17 @@ public class Geocodifica {
         this.luoghi = luoghi;
     }
 
+    /** I primi posti che somigliano a quello che si sta scrivendo, per farlo scegliere. */
+    public List<Posizione> suggerisci(String testo) {
+        if (testo == null || testo.trim().length() < 3) {
+            return List.of();
+        }
+        List<Posizione> trovati = chiedi(testo, 8);
+        Map<String, Posizione> senzaDoppioni = new LinkedHashMap<>();
+        trovati.forEach(p -> senzaDoppioni.putIfAbsent(p.indirizzo(), p));
+        return senzaDoppioni.values().stream().limit(5).toList();
+    }
+
     /** Vuoto se l'indirizzo non esiste o se il servizio non risponde: non e' un errore bloccante. */
     public Optional<Posizione> cerca(String testo) {
         if (testo == null || testo.isBlank()) {
@@ -52,7 +67,7 @@ public class Geocodifica {
         if (memoria.isPresent()) {
             return memoria.map(Geocodifica::posizione);
         }
-        return chiediANominatim(testo).map(trovato -> {
+        return chiedi(testo, 1).stream().findFirst().map(trovato -> {
             Luogo luogo = new Luogo();
             luogo.setCercato(chiave);
             luogo.setLatitudine(trovato.latitudine());
@@ -64,10 +79,10 @@ public class Geocodifica {
         });
     }
 
-    private Optional<Posizione> chiediANominatim(String testo) {
+    private List<Posizione> chiedi(String testo, int quanti) {
         String url = INDIRIZZO_SERVIZIO
                 + "?q=" + URLEncoder.encode(testo, StandardCharsets.UTF_8)
-                + "&format=jsonv2&addressdetails=1&limit=1&countrycodes=it";
+                + "&format=jsonv2&addressdetails=1&limit=" + quanti + "&countrycodes=it";
         try {
             aspettaIlTurno();
             HttpRequest richiesta = HttpRequest.newBuilder(URI.create(url))
@@ -79,24 +94,27 @@ public class Geocodifica {
             HttpResponse<String> risposta = client.send(richiesta, HttpResponse.BodyHandlers.ofString());
             if (risposta.statusCode() != 200) {
                 log.warn("Nominatim ha risposto {} per \"{}\"", risposta.statusCode(), testo);
-                return Optional.empty();
+                return List.of();
             }
             JsonNode risultati = json.readTree(risposta.body());
-            if (!risultati.isArray() || risultati.isEmpty()) {
-                return Optional.empty();
+            if (!risultati.isArray()) {
+                return List.of();
             }
-            JsonNode primo = risultati.get(0);
-            return Optional.of(new Posizione(
-                    primo.get("lat").asDouble(),
-                    primo.get("lon").asDouble(),
-                    primo.get("display_name").asString(),
-                    comune(primo.get("address"))));
+            List<Posizione> posti = new ArrayList<>();
+            for (JsonNode voce : risultati) {
+                posti.add(new Posizione(
+                        voce.get("lat").asDouble(),
+                        voce.get("lon").asDouble(),
+                        voce.get("display_name").asString(),
+                        comune(voce.get("address"))));
+            }
+            return posti;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return Optional.empty();
+            return List.of();
         } catch (Exception e) {
             log.warn("Nominatim non raggiungibile per \"{}\": {}", testo, e.getMessage());
-            return Optional.empty();
+            return List.of();
         }
     }
 

@@ -1,10 +1,11 @@
-import { MapPin, Search, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Search, Users } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
+import CampoLuogo from "../componenti/CampoLuogo";
 import CardLavoratore from "../componenti/CardLavoratore";
 import StatoVuoto from "../componenti/StatoVuoto";
-import { cercaLuogo, elencoLavoratori, type Lavoratore, type Luogo, type TipoLavoratore } from "../lib/api";
+import { elencoLavoratori, type Lavoratore, type Luogo, type TipoLavoratore } from "../lib/api";
 import { usePosizioneCliente } from "../lib/posizione";
 
 const TIPI = [
@@ -17,7 +18,6 @@ const RAGGI = [10, 25, 50, 100];
 export default function ElencoProfessionisti() {
   const miaCitta = usePosizioneCliente();
   const [dove, setDove] = useState<Luogo | null>(null);
-  const [testoDove, setTestoDove] = useState("");
   const [entroKm, setEntroKm] = useState<number | null>(null);
   const [lavoratori, setLavoratori] = useState<Lavoratore[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
@@ -26,12 +26,14 @@ export default function ElencoProfessionisti() {
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
-  // si parte dalla città del profilo, poi il cliente può guardare altrove
+  // la città del profilo è solo il punto di partenza: si mette una volta,
+  // altrimenti tornerebbe al suo posto ogni volta che il cliente ne cerca un'altra
+  const partenzaMessa = useRef(false);
   useEffect(() => {
-    if (miaCitta === undefined || dove !== null) return;
+    if (miaCitta === undefined || partenzaMessa.current) return;
+    partenzaMessa.current = true;
     setDove(miaCitta);
-    setTestoDove(miaCitta?.citta ?? "");
-  }, [miaCitta, dove]);
+  }, [miaCitta]);
 
   useEffect(() => {
     if (miaCitta === undefined) return;
@@ -41,17 +43,7 @@ export default function ElencoProfessionisti() {
       .finally(() => setCaricato(true));
   }, [miaCitta, dove, entroKm]);
 
-  async function cambiaLuogo(testo: string) {
-    if (testo.trim() === "") {
-      setDove(null);
-      return;
-    }
-    try {
-      setDove(await cercaLuogo(testo));
-    } catch {
-      setDove(null);
-    }
-  }
+
 
   const visibili = useMemo(() => {
     const testo = cerca.trim().toLowerCase();
@@ -78,20 +70,17 @@ export default function ElencoProfessionisti() {
           : `${visibili.length} ${visibili.length === 1 ? "risultato" : "risultati"}` +
             (dove
               ? entroKm
-                ? ` entro ${entroKm} km da ${dove.citta ?? testoDove}`
-                : `, dal più vicino a ${dove.citta ?? testoDove}`
+                ? ` entro ${entroKm} km da ${dove.citta ?? dove.indirizzo}`
+                : `, dal più vicino a ${dove.citta ?? dove.indirizzo}`
               : "")}
       </p>
 
       <div className="mt-3.5 flex flex-col gap-2.5 md:flex-row md:items-center">
-        <div className="flex h-12 flex-1 items-center gap-2 rounded-3xl border border-bordo bg-white px-4">
-          <MapPin className="size-5 shrink-0 text-fumo" strokeWidth={1.75} />
-          <input
-            value={testoDove}
-            onChange={(e) => setTestoDove(e.target.value)}
-            onBlur={(e) => cambiaLuogo(e.target.value)}
-            placeholder="Da dove cerchi? Roma, Milano…"
-            className="min-w-0 flex-1 text-sm outline-none"
+        <div className="flex-1">
+          <CampoLuogo
+            segnaposto="Da dove cerchi? Roma, Milano…"
+            scelto={dove}
+            onScelto={setDove}
           />
         </div>
 

@@ -57,6 +57,8 @@ public class RichiestaController {
             @NotBlank String descrizione,
             @NotBlank String citta,
             String indirizzo,
+            Double latitudine,
+            Double longitudine,
             BigDecimal budget,
             LocalDate dataPreferita) {}
 
@@ -151,15 +153,18 @@ public class RichiestaController {
         richiesta.setDescrizione(nuova.descrizione());
         richiesta.setCitta(nuova.citta());
         richiesta.setIndirizzo(nuova.indirizzo());
-        // senza indirizzo si ripiega sulla citta': meglio un punto approssimativo che niente mappa.
-        // se non si trova nemmeno quella la richiesta esiste lo stesso, solo fuori dalla mappa.
-        String daCercare = nuova.indirizzo() == null || nuova.indirizzo().isBlank()
-                ? nuova.citta()
-                : nuova.indirizzo() + ", " + nuova.citta();
-        geocodifica.cerca(daCercare).ifPresent(punto -> {
-            richiesta.setLatitudine(punto.latitudine());
-            richiesta.setLongitudine(punto.longitudine());
-        });
+        // chi sceglie la via da un elenco ha gia' il punto esatto: non serve ricercarlo.
+        // altrimenti si ripiega sulla citta', e se non si trova nemmeno quella la
+        // richiesta esiste lo stesso, solo fuori dalla mappa.
+        if (nuova.latitudine() != null && nuova.longitudine() != null) {
+            richiesta.setLatitudine(nuova.latitudine());
+            richiesta.setLongitudine(nuova.longitudine());
+        } else {
+            geocodifica.cerca(nuova.citta()).ifPresent(punto -> {
+                richiesta.setLatitudine(punto.latitudine());
+                richiesta.setLongitudine(punto.longitudine());
+            });
+        }
         richiesta.setBudget(nuova.budget());
         richiesta.setDataPreferita(nuova.dataPreferita());
         if (nuova.attivitaId() != null) {

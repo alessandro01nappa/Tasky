@@ -21,6 +21,12 @@ public class LuogoController {
         this.geocodifica = geocodifica;
     }
 
+    /** Quello che si sta scrivendo somiglia a questi posti: si sceglie e non si sbaglia. */
+    @GetMapping("/suggerimenti")
+    public java.util.List<Geocodifica.Posizione> suggerimenti(@RequestParam String testo) {
+        return geocodifica.suggerisci(testo);
+    }
+
     @GetMapping
     public Geocodifica.Posizione cerca(@RequestParam String indirizzo) {
         return geocodifica

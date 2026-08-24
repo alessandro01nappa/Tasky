@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import CampoIndirizzo from "../componenti/CampoIndirizzo";
+import CampoLuogo from "../componenti/CampoLuogo";
 import TariffaCategoria from "../componenti/TariffaCategoria";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import {
   creaProfiloFornitore,
   type Attivita,
   type Categoria,
+  type Luogo,
   type TipoLavoratore,
 } from "../lib/api";
 import { scordaProfiloLavoratore, useProfiloLavoratore } from "../lib/lavoratore";
@@ -31,6 +32,7 @@ export default function DiventaLavoratore() {
   const [termini, setTermini] = useState(false);
   const [descrizione, setDescrizione] = useState("");
   const [zonaOperativa, setZonaOperativa] = useState("");
+  const [luogoZona, setLuogoZona] = useState<Luogo | null>(null);
   const [errore, setErrore] = useState("");
   const [inCorso, setInCorso] = useState(false);
 
@@ -44,6 +46,14 @@ export default function DiventaLavoratore() {
     if (!profilo) return;
     setDescrizione(profilo.descrizione);
     setZonaOperativa(profilo.zonaOperativa);
+    if (profilo.latitudine != null && profilo.longitudine != null) {
+      setLuogoZona({
+        latitudine: profilo.latitudine,
+        longitudine: profilo.longitudine,
+        indirizzo: profilo.zonaOperativa,
+        citta: profilo.zonaOperativa,
+      });
+    }
     setTipo(profilo.tipo);
     setTariffe(
       Object.fromEntries(profilo.tariffe.map((t) => [t.categoriaId, String(t.tariffaOraria)])),
@@ -86,6 +96,7 @@ export default function DiventaLavoratore() {
   const mancanti = [
     categorieCoperte.every((c) => tariffe[c.id]) ? null : "una tariffa per ogni categoria",
     scelte.length > 0 ? null : "almeno un lavoro",
+    zonaOperativa.trim() !== "" ? null : "la zona in cui lavori",
     termini ? null : "l'accettazione dei termini",
   ].filter((x): x is string => x !== null);
 
@@ -171,14 +182,15 @@ export default function DiventaLavoratore() {
         </div>
 
 
-        <CampoIndirizzo
+        <CampoLuogo
           etichetta="Zona operativa"
           aiuto="Il comune da cui parti: serve a misurare quanto distano i lavori."
           segnaposto="Ciampino"
-          valore={zonaOperativa}
-          onCambia={setZonaOperativa}
-          onTrovato={() => {}}
-          richiesto
+          scelto={luogoZona}
+          onScelto={(luogo) => {
+            setLuogoZona(luogo);
+            setZonaOperativa(luogo?.citta ?? "");
+          }}
         />
 
         <div className="flex flex-col gap-2">

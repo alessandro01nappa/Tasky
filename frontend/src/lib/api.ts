@@ -200,6 +200,11 @@ export type Luogo = {
   citta: string | null;
 };
 
+/** I posti che somigliano a quello che si sta scrivendo, da far scegliere. */
+export function suggerisciLuoghi(testo: string) {
+  return chiama<Luogo[]>(`/api/luoghi/suggerimenti?testo=${encodeURIComponent(testo)}`);
+}
+
 /** Chiede al backend di tradurre un indirizzo scritto a mano in un punto sulla mappa. */
 export function cercaLuogo(indirizzo: string) {
   return chiama<Luogo>(`/api/luoghi?indirizzo=${encodeURIComponent(indirizzo)}`);
@@ -221,6 +226,8 @@ export function creaRichiesta(dati: {
   descrizione: string;
   citta: string;
   indirizzo?: string;
+  latitudine?: number;
+  longitudine?: number;
   budget?: number | null;
   dataPreferita?: string | null;
 }) {
