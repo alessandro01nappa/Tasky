@@ -3,8 +3,11 @@ package it.tasky;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.DispatcherType;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +27,34 @@ public class SicurezzaConfig {
 
     private final SecretKey chiave;
 
-    public SicurezzaConfig(@Value("${tasky.jwt.segreto}") String segreto) {
-        this.chiave = new SecretKeySpec(segreto.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    private static final Logger log = LoggerFactory.getLogger(SicurezzaConfig.class);
+
+    /** Sotto i 32 byte la firma HMAC-SHA256 non regge: meglio rifiutarsi di partire. */
+    private static final int BYTE_MINIMI = 32;
+
+    public SicurezzaConfig(@Value("${tasky.jwt.segreto:}") String segreto) {
+        this.chiave = new SecretKeySpec(chiaveDa(segreto), "HmacSHA256");
+    }
+
+    /**
+     * Il segreto arriva dall'ambiente e non sta nel codice. Se manca se ne genera
+     * uno a caso: l'app parte lo stesso, ma le sessioni non sopravvivono a un
+     * riavvio, ed e' un prezzo giusto per non avere una chiave pubblica.
+     */
+    private static byte[] chiaveDa(String segreto) {
+        if (segreto == null || segreto.isBlank()) {
+            log.warn("TASKY_JWT_SEGRETO non impostata: ne uso una casuale."
+                    + " Chi ha fatto l'accesso dovra' rifarlo a ogni riavvio.");
+            byte[] casuale = new byte[BYTE_MINIMI];
+            new SecureRandom().nextBytes(casuale);
+            return casuale;
+        }
+        byte[] byteSegreto = segreto.getBytes(StandardCharsets.UTF_8);
+        if (byteSegreto.length < BYTE_MINIMI) {
+            throw new IllegalStateException(
+                    "TASKY_JWT_SEGRETO troppo corta: servono almeno " + BYTE_MINIMI + " caratteri");
+        }
+        return byteSegreto;
     }
 
     @Bean

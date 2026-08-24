@@ -25,6 +25,18 @@ Tasky/
 └── docker-compose.yml   PostgreSQL per lo sviluppo
 ```
 
+## Avvio
+
+Il backend firma le sessioni con una chiave presa dall'ambiente. Senza, ne genera
+una a caso a ogni avvio e chi ha fatto l'accesso deve rifarlo dopo ogni riavvio.
+
+```
+export TASKY_JWT_SEGRETO="una-frase-lunga-almeno-32-caratteri"
+docker compose up -d
+cd backend && mvn spring-boot:run
+cd frontend && npm run dev
+```
+
 ## Modello dati
 
 Otto tabelle. Diagramma completo su [drawSQL](https://drawsql.app/teams/alessandro-nappa/diagrams/tasky),
