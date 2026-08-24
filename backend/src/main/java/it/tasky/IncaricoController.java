@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -89,7 +90,13 @@ public class IncaricoController {
         incarico.setRichiesta(richiesta);
         incarico.setProfiloFornitore(scelta.getProfiloFornitore());
         incarico.setPrezzoConcordato(scelta.getPrezzoOfferto());
-        incarichi.save(incarico);
+        try {
+            // il controllo qui sopra non basta se due accettazioni arrivano insieme:
+            // e' il database a garantire un solo incarico per richiesta
+            incarichi.saveAndFlush(incarico);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La richiesta è già stata assegnata");
+        }
 
         richiesta.setStato(StatoRichiesta.ASSEGNATA);
         richieste.save(richiesta);

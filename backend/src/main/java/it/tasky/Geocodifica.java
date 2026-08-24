@@ -153,7 +153,7 @@ public class Geocodifica {
     }
 
     /** La via col civico, oppure il nome del posto se non e' un indirizzo. */
-    private static String nomeDi(JsonNode dati) {
+    static String nomeDi(JsonNode dati) {
         String via = testo(dati, "street");
         if (via == null) {
             return testo(dati, "name");
@@ -163,7 +163,7 @@ public class Geocodifica {
     }
 
     /** Photon manda i pezzi separati: qui tornano a essere un indirizzo leggibile. */
-    private static String scrivi(JsonNode dati) {
+    static String scrivi(JsonNode dati) {
         String primo = nomeDi(dati);
 
         LinkedHashSet<String> pezzi = new LinkedHashSet<>();
@@ -180,7 +180,7 @@ public class Geocodifica {
     }
 
     /** Il comune ha nomi diversi a seconda di quanto e' grande il posto. */
-    private static String comune(JsonNode dati) {
+    static String comune(JsonNode dati) {
         String citta = testo(dati, "city");
         if (citta != null) {
             return citta;
@@ -192,7 +192,7 @@ public class Geocodifica {
         return testo(dati, "county");
     }
 
-    private static String testo(JsonNode dati, String campo) {
+    static String testo(JsonNode dati, String campo) {
         JsonNode valore = dati == null ? null : dati.get(campo);
         return valore == null || valore.asString().isBlank() ? null : valore.asString();
     }
