@@ -1,4 +1,4 @@
-import { LayoutGrid, Users } from "lucide-react";
+import { ChevronUp, LayoutGrid, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
@@ -32,6 +32,8 @@ export default function Esplora() {
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
   const [lavoratori, setLavoratori] = useState<Lavoratore[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
+  // le categorie si aprono qui sotto: non c'è motivo di cambiare pagina per vederle
+  const [tutte, setTutte] = useState(false);
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
@@ -88,7 +90,7 @@ export default function Esplora() {
 
             <h2 className="mt-8 text-lg font-semibold">Categorie</h2>
             <div className="mt-3 grid grid-cols-4 gap-4">
-              {elencoCategorie.slice(0, 8).map((categoria, indice) => {
+              {(tutte ? elencoCategorie : elencoCategorie.slice(0, 8)).map((categoria, indice) => {
                 const attiva = filtro === categoria.nome;
                 return (
                   <button
@@ -118,13 +120,22 @@ export default function Esplora() {
               })}
             </div>
 
-            <Link
-              to="/categorie"
-              className="mt-3.5 flex h-12 items-center justify-center gap-2 rounded-2xl border border-bordo bg-white text-sm font-semibold"
-            >
-              <LayoutGrid className="size-5" strokeWidth={2} />
-              Esplora tutte le categorie
-            </Link>
+            {elencoCategorie.length > 8 && (
+              <button
+                type="button"
+                onClick={() => setTutte(!tutte)}
+                className="mt-3.5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-bordo bg-white text-sm font-semibold"
+              >
+                {tutte ? (
+                  <ChevronUp className="size-5" strokeWidth={2} />
+                ) : (
+                  <LayoutGrid className="size-5" strokeWidth={2} />
+                )}
+                {tutte
+                  ? "Mostra meno categorie"
+                  : `Esplora tutte le categorie (${elencoCategorie.length})`}
+              </button>
+            )}
           </div>
 
           <aside className="mt-8 lg:mt-0">
