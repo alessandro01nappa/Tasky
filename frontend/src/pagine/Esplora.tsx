@@ -2,6 +2,7 @@ import { ChevronUp, LayoutGrid, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
+import CampoLuogo from "../componenti/CampoLuogo";
 import CardLavoratore from "../componenti/CardLavoratore";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
@@ -14,7 +15,7 @@ import {
   type Lavoratore,
   type TipoLavoratore,
 } from "../lib/api";
-import { usePosizioneCliente } from "../lib/posizione";
+import { salvaDove, useDove } from "../lib/dove";
 
 /** Oltre questa distanza "in zona" non vuol piu' dire niente. */
 const RAGGIO_ZONA_KM = 50;
@@ -26,7 +27,7 @@ const TIPI = [
 
 /** La home di chi cerca: categorie e persone, mai gli annunci degli altri. */
 export default function Esplora() {
-  const posizione = usePosizioneCliente();
+  const dove = useDove();
   const [parametri, impostaParametri] = useSearchParams();
   const filtro = parametri.get("categoria");
   const [elencoCategorie, setElencoCategorie] = useState<Categoria[]>([]);
@@ -42,12 +43,12 @@ export default function Esplora() {
   }, []);
 
   useEffect(() => {
-    if (posizione === undefined) return;
-    elencoLavoratori(posizione ?? undefined)
+    if (dove === undefined) return;
+    elencoLavoratori(dove ?? undefined)
       .then(setLavoratori)
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
-  }, [posizione]);
+  }, [dove]);
 
   // i migliori vicini, se ce ne sono: altrimenti si allarga a tutti e il titolo lo dice
   const { migliori, vicini } = useMemo(() => {
@@ -64,7 +65,19 @@ export default function Esplora() {
   return (
     <Pagina larga>
       <h1 className="text-3xl font-bold">Cosa ti serve oggi?</h1>
-      <p className="mt-1 text-sm font-medium text-fumo">Trova la persona giusta vicino a te</p>
+      <p className="mt-1 text-sm font-medium text-fumo">
+        {dove ? `Lavori da fare a ${dove.citta ?? dove.nome}` : "Trova la persona giusta vicino a te"}
+      </p>
+
+      <div className="mt-3.5">
+        <CampoLuogo
+          segnaposto="Dove ti serve? Roma, Milano…"
+          aiuto="Categorie, esperti e distanze partono da qui."
+          scelto={dove ?? null}
+          onScelto={salvaDove}
+        />
+      </div>
+
 
       {!caricato && <ScheletroHome />}
 

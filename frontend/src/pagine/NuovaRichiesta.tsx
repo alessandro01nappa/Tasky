@@ -18,7 +18,7 @@ import {
   type Luogo,
   type PrezziDiRiferimento,
 } from "../lib/api";
-import { usePosizioneCliente } from "../lib/posizione";
+import { useDove } from "../lib/dove";
 import { inIso, lunediDi, piuGiorni, raccontaQuando } from "../lib/quando";
 
 const PASSI = ["Titolo", "Dettagli", "Budget", "Data"];
@@ -34,8 +34,8 @@ const QUANDO = [
 export default function NuovaRichiesta() {
   const oggi = inIso(new Date());
   const navigate = useNavigate();
-  // la città del cliente aiuta a mettere in cima le vie giuste
-  const posizione = usePosizioneCliente();
+  // il posto scelto dal cliente aiuta a mettere in cima le vie giuste
+  const dove = useDove();
   const [parametri] = useSearchParams();
   const fornitoreId = parametri.get("fornitore");
 
@@ -269,7 +269,7 @@ export default function NuovaRichiesta() {
               etichetta="Via"
               aiuto="Scegli la via dall'elenco. L'indirizzo lo vedrai solo tu, finché non assegni il lavoro."
               segnaposto="Via del Corso, Roma"
-              vicinoA={posizione}
+              vicinoA={dove ?? null}
               scelto={via}
               onScelto={(luogo) => {
                 setVia(luogo);

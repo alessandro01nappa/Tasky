@@ -1,12 +1,12 @@
 import { Search, Users } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BarraNavigazione from "../componenti/BarraNavigazione";
 import Pagina from "../componenti/Pagina";
 import CampoLuogo from "../componenti/CampoLuogo";
 import CardLavoratore from "../componenti/CardLavoratore";
 import StatoVuoto from "../componenti/StatoVuoto";
 import { elencoLavoratori, type Lavoratore, type Luogo, type TipoLavoratore } from "../lib/api";
-import { usePosizioneCliente } from "../lib/posizione";
+import { salvaDove, useDove } from "../lib/dove";
 
 const TIPI = [
   { valore: "PROFESSIONISTA", etichetta: "Professionisti" },
@@ -16,8 +16,7 @@ const TIPI = [
 const RAGGI = [10, 25, 50, 100];
 
 export default function ElencoProfessionisti() {
-  const miaCitta = usePosizioneCliente();
-  const [dove, setDove] = useState<Luogo | null>(null);
+  const dove = useDove();
   const [entroKm, setEntroKm] = useState<number | null>(null);
   const [lavoratori, setLavoratori] = useState<Lavoratore[]>([]);
   const [tipo, setTipo] = useState<TipoLavoratore>("PROFESSIONISTA");
@@ -26,22 +25,13 @@ export default function ElencoProfessionisti() {
   const [errore, setErrore] = useState("");
   const [caricato, setCaricato] = useState(false);
 
-  // la città del profilo è solo il punto di partenza: si mette una volta,
-  // altrimenti tornerebbe al suo posto ogni volta che il cliente ne cerca un'altra
-  const partenzaMessa = useRef(false);
   useEffect(() => {
-    if (miaCitta === undefined || partenzaMessa.current) return;
-    partenzaMessa.current = true;
-    setDove(miaCitta);
-  }, [miaCitta]);
-
-  useEffect(() => {
-    if (miaCitta === undefined) return;
+    if (dove === undefined) return;
     elencoLavoratori(dove ? { ...dove, entroKm: entroKm ?? undefined } : undefined)
       .then(setLavoratori)
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
-  }, [miaCitta, dove, entroKm]);
+  }, [dove, entroKm]);
 
 
 
@@ -79,9 +69,9 @@ export default function ElencoProfessionisti() {
         <div className="flex-1">
           <CampoLuogo
             segnaposto="Da dove cerchi? Roma, Milano…"
-            scelto={dove}
-            vicinoA={miaCitta ?? null}
-            onScelto={setDove}
+            scelto={dove ?? null}
+            vicinoA={dove ?? null}
+            onScelto={salvaDove}
           />
         </div>
 

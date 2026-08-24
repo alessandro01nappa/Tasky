@@ -6,6 +6,7 @@ import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import { io, mieiIncarichi, type Incarico, type Io } from "../lib/api";
 import { scordaProfiloLavoratore, useProfiloLavoratore } from "../lib/lavoratore";
+import { cancellaDove } from "../lib/dove";
 import { cancellaModalita, useModalita } from "../lib/modalita";
 import { cancellaToken } from "../lib/sessione";
 
@@ -35,6 +36,7 @@ export default function Profilo() {
   function esci() {
     scordaProfiloLavoratore();
     cancellaModalita();
+    cancellaDove();
     cancellaToken();
     navigate("/accesso");
   }
