@@ -1,6 +1,7 @@
 import { MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Richiesta } from "../lib/api";
+import { raccontaQuando } from "../lib/quando";
 
 const COLORI_STATO: Record<string, string> = {
   APERTA: "bg-verde-chiaro text-verde",
@@ -29,6 +30,7 @@ export default function CardRichiesta({ richiesta }: { richiesta: Richiesta }) {
         {richiesta.attivita ?? richiesta.categoria} • {richiesta.citta}
         {richiesta.distanzaKm !== null && ` • a ${richiesta.distanzaKm} km`}
         {richiesta.budget != null && ` • ${richiesta.budget} €`}
+        {richiesta.dataPreferita && ` • ${raccontaQuando(richiesta.dataPreferita, richiesta.dataEntro)}`}
       </p>
 
       <p className="mt-2 line-clamp-2 text-sm">{richiesta.descrizione}</p>

@@ -28,7 +28,9 @@ export type Richiesta = {
   /** Quanto dista dalla zona del lavoratore, se il backend sa dove sono entrambi. */
   distanzaKm: number | null;
   budget: number | null;
+  /** Estremi di quando si può fare: uguali = giorno preciso, entrambi nulli = nessun vincolo. */
   dataPreferita: string | null;
+  dataEntro: string | null;
   stato: "APERTA" | "ASSEGNATA" | "COMPLETATA" | "ANNULLATA";
   categoria: string;
   attivita: string | null;
@@ -198,6 +200,9 @@ export type Luogo = {
   longitudine: number;
   /** La via col civico, o il nome del comune: è quello che si mostra dopo la scelta. */
   nome: string | null;
+  /** Via e civico separati: la proposta può già contenere un numero. */
+  via: string | null;
+  civico: string | null;
   indirizzo: string;
   citta: string | null;
 };
@@ -237,6 +242,7 @@ export function creaRichiesta(dati: {
   longitudine?: number;
   budget?: number | null;
   dataPreferita?: string | null;
+  dataEntro?: string | null;
 }) {
   return invia<Richiesta>("/api/richieste", "POST", dati);
 }

@@ -54,7 +54,14 @@ public class RichiestaServizio {
     @Column(precision = 10, scale = 2)
     private BigDecimal budget;
 
+    /**
+     * Le due date sono gli estremi di quando il lavoro si puo' fare. Uguali
+     * significa un giorno preciso, diverse una fascia, entrambe vuote nessun
+     * vincolo.
+     */
     private LocalDate dataPreferita;
+
+    private LocalDate dataEntro;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -156,6 +163,14 @@ public class RichiestaServizio {
 
     public void setDataPreferita(LocalDate dataPreferita) {
         this.dataPreferita = dataPreferita;
+    }
+
+    public LocalDate getDataEntro() {
+        return dataEntro;
+    }
+
+    public void setDataEntro(LocalDate dataEntro) {
+        this.dataEntro = dataEntro;
     }
 
     public StatoRichiesta getStato() {

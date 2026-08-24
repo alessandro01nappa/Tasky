@@ -19,10 +19,20 @@ import {
   type PrezziDiRiferimento,
 } from "../lib/api";
 import { usePosizioneCliente } from "../lib/posizione";
+import { inIso, lunediDi, piuGiorni, raccontaQuando } from "../lib/quando";
 
 const PASSI = ["Titolo", "Dettagli", "Budget", "Data"];
 
+type Quando = "flessibile" | "giorno" | "settimana";
+
+const QUANDO = [
+  { valore: "flessibile", etichetta: "Sono flessibile" },
+  { valore: "giorno", etichetta: "Un giorno preciso" },
+  { valore: "settimana", etichetta: "Una settimana" },
+] as const;
+
 export default function NuovaRichiesta() {
+  const oggi = inIso(new Date());
   const navigate = useNavigate();
   // la città del cliente aiuta a mettere in cima le vie giuste
   const posizione = usePosizioneCliente();
@@ -44,6 +54,8 @@ export default function NuovaRichiesta() {
   const [budget, setBudget] = useState("");
   const [preventivo, setPreventivo] = useState(false);
   const [dataPreferita, setDataPreferita] = useState("");
+  const [dataEntro, setDataEntro] = useState("");
+  const [quando, setQuando] = useState<Quando>("flessibile");
   const [prezzi, setPrezzi] = useState<PrezziDiRiferimento | null>(null);
   const [errore, setErrore] = useState("");
   const [inCorso, setInCorso] = useState(false);
@@ -72,6 +84,26 @@ export default function NuovaRichiesta() {
       .catch(() => setAttivita([]));
   }, [categoriaId]);
 
+  function scegliQuando(scelta: Quando) {
+    setQuando(scelta);
+    if (scelta === "flessibile") {
+      setDataPreferita("");
+      setDataEntro("");
+    } else if (scelta === "giorno" && dataEntro !== dataPreferita) {
+      setDataEntro(dataPreferita);
+    } else if (scelta === "settimana" && dataPreferita) {
+      scegliSettimana(dataPreferita);
+    }
+  }
+
+  // basta indicare un giorno: la fascia è la settimana in cui cade, lunedì-domenica
+  function scegliSettimana(giorno: string) {
+    if (!giorno) return;
+    const lunedi = lunediDi(new Date(giorno));
+    setDataPreferita(inIso(lunedi));
+    setDataEntro(inIso(piuGiorni(lunedi, 6)));
+  }
+
   useEffect(() => {
     if (categoriaId === null) return;
     prezziDiRiferimento(categoriaId, attivitaId ?? undefined)
@@ -97,10 +129,11 @@ export default function NuovaRichiesta() {
         titolo,
         descrizione,
         citta,
-        indirizzo: `${via?.indirizzo.split(",")[0] ?? ""} ${civico}`.trim(),
+        indirizzo: `${via?.via ?? via?.nome ?? ""} ${civico}`.trim(),
         ...(via ? { latitudine: via.latitudine, longitudine: via.longitudine } : {}),
         budget: preventivo || !budget ? null : Number(budget),
         dataPreferita: dataPreferita || null,
+        dataEntro: dataEntro || null,
       });
       navigate(`/richieste/${creata.id}`);
     } catch (e) {
@@ -241,6 +274,8 @@ export default function NuovaRichiesta() {
               onScelto={(luogo) => {
                 setVia(luogo);
                 setCitta(luogo?.citta ?? "");
+                // se la proposta era già un civico preciso non lo si richiede due volte
+                if (luogo?.civico) setCivico(luogo.civico);
               }}
             />
           </div>
@@ -301,16 +336,58 @@ export default function NuovaRichiesta() {
       {passo === 3 && (
         <>
           <div className="mt-5 rounded-3xl border border-bordo bg-white p-5 shadow-morbida">
-            <label htmlFor="data" className="text-sm font-semibold text-fumo">
-              Data preferita
-            </label>
-            <input
-              id="data"
-              type="date"
-              value={dataPreferita}
-              onChange={(e) => setDataPreferita(e.target.value)}
-              className="mt-2 h-11 w-full rounded-2xl border border-bordo px-4 outline-none"
-            />
+            <p className="text-sm font-semibold text-fumo">Quando ti serve</p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {QUANDO.map((voce) => (
+                <button
+                  key={voce.valore}
+                  type="button"
+                  onClick={() => scegliQuando(voce.valore)}
+                  className={`h-9 rounded-full border px-4 text-sm font-semibold ${
+                    quando === voce.valore
+                      ? "border-corallo bg-corallo text-white"
+                      : "border-bordo bg-white text-fumo"
+                  }`}
+                >
+                  {voce.etichetta}
+                </button>
+              ))}
+            </div>
+
+            {quando === "giorno" && (
+              <input
+                type="date"
+                aria-label="Giorno"
+                value={dataPreferita}
+                min={oggi}
+                onChange={(e) => {
+                  setDataPreferita(e.target.value);
+                  setDataEntro(e.target.value);
+                }}
+                className="mt-3 h-11 w-full rounded-2xl border border-bordo px-4 outline-none"
+              />
+            )}
+
+            {quando === "settimana" && (
+              <>
+                <input
+                  type="date"
+                  aria-label="Settimana"
+                  value={dataPreferita}
+                  min={oggi}
+                  onChange={(e) => scegliSettimana(e.target.value)}
+                  className="mt-3 h-11 w-full rounded-2xl border border-bordo px-4 outline-none"
+                />
+                <p className="mt-2 text-xs text-fumo">
+                  Scegli un giorno qualsiasi: prendo tutta la sua settimana, da lunedì a domenica.
+                </p>
+              </>
+            )}
+
+            <p className="mt-3 text-sm font-semibold">
+              {raccontaQuando(dataPreferita || null, dataEntro || null)}
+            </p>
           </div>
 
           <div className="mt-3 rounded-3xl border border-bordo bg-white p-5">
@@ -319,7 +396,8 @@ export default function NuovaRichiesta() {
             <p className="mt-1 text-sm text-fumo">
               {attivita.find((a) => a.id === attivitaId)?.nome ??
                 elencoCategorie.find((c) => c.id === categoriaId)?.nome}{" "}
-              • {citta} • {preventivo || !budget ? "preventivo da concordare" : `${budget} €`}
+              • {citta} • {preventivo || !budget ? "preventivo da concordare" : `${budget} €`} •{" "}
+              {raccontaQuando(dataPreferita || null, dataEntro || null)}
             </p>
           </div>
         </>

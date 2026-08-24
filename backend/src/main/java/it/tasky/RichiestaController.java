@@ -64,7 +64,8 @@ public class RichiestaController {
             Double latitudine,
             Double longitudine,
             BigDecimal budget,
-            LocalDate dataPreferita) {}
+            LocalDate dataPreferita,
+            LocalDate dataEntro) {}
 
     public record RispostaRichiesta(
             Long id,
@@ -77,6 +78,7 @@ public class RichiestaController {
             Double distanzaKm,
             BigDecimal budget,
             LocalDate dataPreferita,
+            LocalDate dataEntro,
             StatoRichiesta stato,
             String categoria,
             String attivita,
@@ -111,6 +113,7 @@ public class RichiestaController {
                     distanza(richiesta, chiGuarda),
                     richiesta.getBudget(),
                     richiesta.getDataPreferita(),
+                    richiesta.getDataEntro(),
                     richiesta.getStato(),
                     richiesta.getCategoria().getNome(),
                     richiesta.getAttivita() == null ? null : richiesta.getAttivita().getNome(),
@@ -171,6 +174,14 @@ public class RichiestaController {
         }
         richiesta.setBudget(nuova.budget());
         richiesta.setDataPreferita(nuova.dataPreferita());
+        // una data sola vale come giorno preciso: la fascia comincia e finisce li'
+        richiesta.setDataEntro(nuova.dataEntro() == null ? nuova.dataPreferita() : nuova.dataEntro());
+        if (richiesta.getDataEntro() != null
+                && richiesta.getDataPreferita() != null
+                && richiesta.getDataEntro().isBefore(richiesta.getDataPreferita())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "La fine della fascia viene prima dell'inizio");
+        }
         if (nuova.attivitaId() != null) {
             AttivitaServizio scelta = attivita
                     .findById(nuova.attivitaId())

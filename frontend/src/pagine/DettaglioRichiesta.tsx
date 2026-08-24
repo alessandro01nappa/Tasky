@@ -13,6 +13,7 @@ import {
   type Candidatura,
   type Richiesta,
 } from "../lib/api";
+import { raccontaQuando } from "../lib/quando";
 import { useProfiloLavoratore } from "../lib/lavoratore";
 
 const COLORI_STATO: Record<string, string> = {
@@ -155,14 +156,9 @@ export default function DettaglioRichiesta() {
         </div>
         <div className="flex-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
           <p className="text-base font-semibold">
-            {dati.dataPreferita
-              ? new Date(dati.dataPreferita).toLocaleDateString("it-IT", {
-                  day: "numeric",
-                  month: "short",
-                })
-              : "Libera"}
+            {raccontaQuando(dati.dataPreferita, dati.dataEntro)}
           </p>
-          <p className="mt-1 text-xs text-fumo">Data</p>
+          <p className="mt-1 text-xs text-fumo">Quando</p>
         </div>
       </div>
 

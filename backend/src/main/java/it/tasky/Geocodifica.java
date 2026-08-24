@@ -43,7 +43,13 @@ public class Geocodifica {
      * comune. Serve a mostrare cosa si e' scelto senza rileggere tutto l'indirizzo.
      */
     public record Posizione(
-            double latitudine, double longitudine, String nome, String indirizzo, String citta) {}
+            double latitudine,
+            double longitudine,
+            String nome,
+            String via,
+            String civico,
+            String indirizzo,
+            String citta) {}
 
     private final LuogoRepository luoghi;
     private final HttpClient client =
@@ -131,6 +137,8 @@ public class Geocodifica {
                         punto.get(1).asDouble(),
                         punto.get(0).asDouble(),
                         nomeDi(dati),
+                        testo(dati, "street"),
+                        testo(dati, "housenumber"),
                         scrivi(dati),
                         comune(dati)));
             }
@@ -202,6 +210,8 @@ public class Geocodifica {
                 luogo.getLatitudine(),
                 luogo.getLongitudine(),
                 luogo.getCitta(),
+                null,
+                null,
                 luogo.getIndirizzo(),
                 luogo.getCitta());
     }

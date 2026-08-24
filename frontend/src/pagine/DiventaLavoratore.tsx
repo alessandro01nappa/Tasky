@@ -51,6 +51,8 @@ export default function DiventaLavoratore() {
         latitudine: profilo.latitudine,
         longitudine: profilo.longitudine,
         nome: profilo.zonaOperativa,
+        via: null,
+        civico: null,
         indirizzo: profilo.zonaOperativa,
         citta: profilo.zonaOperativa,
       });
