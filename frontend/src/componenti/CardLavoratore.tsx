@@ -89,7 +89,7 @@ export default function CardLavoratore({ lavoratore }: { lavoratore: Lavoratore 
             professionista ? "bg-verde" : "bg-corallo"
           }`}
         >
-          Prenota
+          Contatta
         </Link>
       </div>
     </div>

@@ -150,7 +150,7 @@ export default function NuovaRichiesta() {
         Torna alla home
       </Link>
 
-      <h1 className="mt-4 text-3xl font-bold">{prenotato ? "Prenota" : "Nuova richiesta"}</h1>
+      <h1 className="mt-4 text-3xl font-bold">{prenotato ? "Contatta" : "Nuova richiesta"}</h1>
       <p className="mt-1 text-sm font-medium text-fumo">
         {prenotato ? `La richiesta va solo a ${prenotato.nome}` : "Pubblica in pochi passi"}
       </p>
@@ -429,7 +429,7 @@ export default function NuovaRichiesta() {
             disabled={inCorso}
             className="h-14 flex-1 rounded-2xl bg-corallo font-semibold text-white shadow-corallo"
           >
-            {prenotato ? "Invia la prenotazione" : "Pubblica richiesta"}
+            {prenotato ? "Invia la richiesta" : "Pubblica richiesta"}
           </button>
         )}
       </div>

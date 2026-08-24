@@ -138,7 +138,7 @@ export default function DettaglioRichiesta() {
         )}
         {dati.fornitoreRichiesto && (
           <span className="rounded-full bg-miele px-2.5 py-1.5 text-xs font-medium text-ambra">
-            Prenotazione per {dati.fornitoreRichiesto}
+            Richiesta per {dati.fornitoreRichiesto}
           </span>
         )}
       </div>

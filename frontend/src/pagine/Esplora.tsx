@@ -90,7 +90,7 @@ export default function Esplora() {
             >
               <p className="text-xl font-bold text-white">Sfoglia gli esperti in zona</p>
               <p className="mt-1 max-w-60 text-sm text-white">
-                Scegli tu la persona e prenotala direttamente
+                Scegli tu la persona e contattala direttamente
               </p>
             </Link>
 

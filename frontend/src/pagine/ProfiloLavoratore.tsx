@@ -118,7 +118,7 @@ export default function ProfiloLavoratore() {
             professionista ? "bg-verde" : "bg-corallo"
           }`}
         >
-          Prenota {lavoratore.nome.split(" ")[0]}
+          Contatta {lavoratore.nome.split(" ")[0]}
         </Link>
 
         <h2 className="mt-5 text-lg font-semibold">Chi è {lavoratore.nome.split(" ")[0]}</h2>

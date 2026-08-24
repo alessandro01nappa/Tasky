@@ -72,7 +72,7 @@ export default function Permessi() {
     {
       titolo: "Notifiche importanti",
       testo:
-        "Ti avvisiamo quando ricevi candidature, messaggi, conferme o aggiornamenti su prenotazioni e pagamenti.",
+        "Ti avvisiamo quando ricevi candidature, proposte o aggiornamenti sui tuoi lavori.",
       sfondo: "bg-verde-chiaro",
       colore: "text-verde",
       Icona: Bell,
