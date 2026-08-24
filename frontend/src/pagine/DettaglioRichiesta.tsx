@@ -5,6 +5,7 @@ import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import StatoSuccesso from "../componenti/StatoSuccesso";
 import {
+  annullaRichiesta,
   candidati,
   candidatureRicevute,
   creaIncarico,
@@ -59,6 +60,16 @@ export default function DettaglioRichiesta() {
       })
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
   }, [idRichiesta]);
+
+  async function ritira() {
+    if (!confirm("Ritiri l'annuncio? I Tasker non lo vedranno più.")) return;
+    setErrore("");
+    try {
+      setDati(await annullaRichiesta(Number(id)));
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : "Errore inatteso");
+    }
+  }
 
   async function inviaCandidatura(evento: React.FormEvent) {
     evento.preventDefault();
@@ -199,9 +210,7 @@ export default function DettaglioRichiesta() {
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    {c.prezzoOfferto != null && (
-                      <p className="font-semibold">€{c.prezzoOfferto}</p>
-                    )}
+                    {c.prezzoOfferto != null && <p className="font-semibold">€{c.prezzoOfferto}</p>}
                     <p className="text-xs text-fumo">{c.zonaOperativa}</p>
                   </div>
                 </div>
@@ -321,6 +330,16 @@ export default function DettaglioRichiesta() {
             testo="Il cliente la vedrà fra le proposte ricevute. La trovi nella tua dashboard."
           />
         </div>
+      )}
+
+      {mia && dati.stato === "APERTA" && (
+        <button
+          type="button"
+          onClick={ritira}
+          className="mt-8 h-12 w-full rounded-2xl border border-bordo text-sm font-semibold text-corallo"
+        >
+          Ritira l'annuncio
+        </button>
       )}
 
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}

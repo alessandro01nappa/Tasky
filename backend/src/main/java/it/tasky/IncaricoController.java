@@ -155,6 +155,34 @@ public class IncaricoController {
         return RispostaIncarico.da(incarichi.save(incarico), utenteId);
     }
 
+    /**
+     * Un lavoro puo' saltare: succede. Lo puo' fermare sia chi l'ha commissionato
+     * sia chi doveva farlo, finche' non e' concluso. La richiesta si chiude con
+     * lui: il cliente ne pubblica un'altra se gli serve ancora.
+     */
+    @PostMapping("/{id}/annulla")
+    @Transactional
+    public RispostaIncarico annulla(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        Incarico incarico = incaricoEsistente(id);
+        Long utenteId = utenteCorrente.da(token).getId();
+        if (!fornitore(incarico, utenteId)
+                && !incarico.getRichiesta().getCliente().getId().equals(utenteId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incarico non tuo");
+        }
+        if (incarico.getStato() == StatoIncarico.COMPLETATO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Il lavoro è già concluso");
+        }
+        if (incarico.getStato() == StatoIncarico.ANNULLATO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Il lavoro è già annullato");
+        }
+
+        incarico.setStato(StatoIncarico.ANNULLATO);
+        RichiestaServizio richiesta = incarico.getRichiesta();
+        richiesta.setStato(StatoRichiesta.ANNULLATA);
+        richieste.save(richiesta);
+        return RispostaIncarico.da(incarichi.save(incarico), utenteId);
+    }
+
     private void verificaTransizione(StatoIncarico attuale, StatoIncarico nuovo) {
         boolean consentita = (attuale == StatoIncarico.ASSEGNATO && nuovo == StatoIncarico.IN_CORSO)
                 || (attuale == StatoIncarico.IN_CORSO && nuovo == StatoIncarico.COMPLETATO);

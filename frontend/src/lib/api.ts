@@ -274,6 +274,23 @@ export function rifiutaRichiesta(id: number) {
   return invia<Richiesta>(`/api/richieste/${id}/rifiuta`, "POST", {});
 }
 
+/** Ritira il proprio annuncio, finché nessuno ci sta lavorando. */
+export function annullaRichiesta(id: number) {
+  return invia<Richiesta>(`/api/richieste/${id}/annulla`, "POST", {});
+}
+
+/** Ferma un lavoro assegnato: lo possono fare sia il cliente sia il Tasker. */
+export function annullaIncarico(id: number) {
+  return invia<Incarico>(`/api/incarichi/${id}/annulla`, "POST", {});
+}
+
+/** Ritira la propria candidatura, finché il cliente non ha deciso. */
+export function ritiraCandidatura(richiestaId: number, candidaturaId: number) {
+  return chiama<void>(`/api/richieste/${richiestaId}/candidature/${candidaturaId}`, {
+    method: "DELETE",
+  });
+}
+
 export function candidatureRicevute(richiestaId: number) {
   return chiama<Candidatura[]>(`/api/richieste/${richiestaId}/candidature`);
 }

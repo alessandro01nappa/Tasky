@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import Pagina from "../componenti/Pagina";
 import StatoSuccesso from "../componenti/StatoSuccesso";
 import {
+  annullaIncarico,
   cambiaStatoIncarico,
   creaRecensione,
   incarico as leggiIncarico,
@@ -38,6 +39,16 @@ export default function DettaglioIncarico() {
       .catch(() => setRecensione(null));
   }, [idIncarico]);
 
+  async function annulla() {
+    if (!confirm("Annulli il lavoro? La richiesta si chiude e va ripubblicata.")) return;
+    setErrore("");
+    try {
+      setDati(await annullaIncarico(Number(id)));
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : "Errore inatteso");
+    }
+  }
+
   async function avanza() {
     if (!dati) return;
     const prossimo = PROSSIMO_STATO[dati.stato];
@@ -66,7 +77,10 @@ export default function DettaglioIncarico() {
   if (!dati) {
     return (
       <div className="mx-auto min-h-screen max-w-md px-6 pt-7">
-        <Link to="/profilo" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
+        <Link
+          to="/profilo"
+          className="flex items-center gap-1.5 text-sm font-semibold text-corallo"
+        >
           <ArrowLeft className="size-4" strokeWidth={2.25} />
           Torna al profilo
         </Link>
@@ -153,7 +167,11 @@ export default function DettaglioIncarico() {
                 aria-label={`${n} su 5`}
                 className="text-ambra"
               >
-                <Star className="size-8" strokeWidth={1.75} fill={n <= voto ? "currentColor" : "none"} />
+                <Star
+                  className="size-8"
+                  strokeWidth={1.75}
+                  fill={n <= voto ? "currentColor" : "none"}
+                />
               </button>
             ))}
           </div>
@@ -179,6 +197,16 @@ export default function DettaglioIncarico() {
             Invia recensione
           </button>
         </form>
+      )}
+
+      {dati.stato !== "COMPLETATO" && dati.stato !== "ANNULLATO" && (
+        <button
+          type="button"
+          onClick={annulla}
+          className="mt-8 h-12 w-full rounded-2xl border border-bordo text-sm font-semibold text-corallo"
+        >
+          Annulla il lavoro
+        </button>
       )}
 
       {errore && <p className="mt-4 text-sm text-red-600">{errore}</p>}

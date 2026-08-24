@@ -6,6 +6,7 @@ import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import ScheletroDashboard from "../componenti/ScheletroDashboard";
 import {
+  ritiraCandidatura,
   accettaRichiesta,
   mieCandidature,
   mieiIncarichi,
@@ -43,11 +44,24 @@ export default function DashboardLavoratore() {
 
   useEffect(() => {
     if (!profilo) return;
-    recensioniLavoratore(profilo.id).then(setRecensioni).catch(() => setRecensioni(null));
+    recensioniLavoratore(profilo.id)
+      .then(setRecensioni)
+      .catch(() => setRecensioni(null));
   }, [profilo]);
 
   const inCorso = incarichi.filter((i) => i.stato !== "COMPLETATO");
   const concluse = incarichi.filter((i) => i.stato === "COMPLETATO");
+
+  async function ritira(candidatura: MiaCandidatura) {
+    if (!confirm("Ritiri la candidatura? Il cliente non la vedrà più.")) return;
+    setErrore("");
+    try {
+      await ritiraCandidatura(candidatura.richiestaId, candidatura.id);
+      setCandidature(await mieCandidature());
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : "Errore inatteso");
+    }
+  }
 
   async function rispondi(id: number, accetta: boolean) {
     setErrore("");
@@ -85,8 +99,7 @@ export default function DashboardLavoratore() {
                   recensioni && recensioni.numero > 0
                     ? `Su ${recensioni.numero} recension${recensioni.numero === 1 ? "e" : "i"}`
                     : "Recensioni",
-                valore:
-                  recensioni && recensioni.numero > 0 ? recensioni.media.toFixed(1) : "—",
+                valore: recensioni && recensioni.numero > 0 ? recensioni.media.toFixed(1) : "—",
               },
             ].map((dato) => (
               <div key={dato.etichetta} className="rounded-3xl border border-bordo bg-white p-4">
@@ -165,21 +178,31 @@ export default function DashboardLavoratore() {
           </h2>
           <div className="mt-3 flex flex-col gap-3">
             {candidature.map((c) => (
-              <Link
-                key={c.id}
-                to={`/richieste/${c.richiestaId}`}
-                className="block rounded-3xl border border-bordo bg-white p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-base font-semibold">{c.titoloRichiesta}</p>
-                  <span className="shrink-0 rounded-full bg-sabbia px-3 py-1 text-xs font-semibold text-fumo">
-                    {c.stato.toLowerCase().replace("_", " ")}
-                  </span>
-                </div>
-                {c.prezzoOfferto != null && (
-                  <p className="mt-1.5 text-sm text-fumo">Hai offerto {c.prezzoOfferto} €</p>
+              <div key={c.id} className="flex flex-col items-start">
+                <Link
+                  to={`/richieste/${c.richiestaId}`}
+                  className="block w-full rounded-3xl border border-bordo bg-white p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-base font-semibold">{c.titoloRichiesta}</p>
+                    <span className="shrink-0 rounded-full bg-sabbia px-3 py-1 text-xs font-semibold text-fumo">
+                      {c.stato.toLowerCase().replace("_", " ")}
+                    </span>
+                  </div>
+                  {c.prezzoOfferto != null && (
+                    <p className="mt-1.5 text-sm text-fumo">Hai offerto {c.prezzoOfferto} €</p>
+                  )}
+                </Link>
+                {c.stato === "IN_ATTESA" && (
+                  <button
+                    type="button"
+                    onClick={() => ritira(c)}
+                    className="mt-2 h-10 rounded-2xl border border-bordo px-4 text-xs font-semibold text-corallo"
+                  >
+                    Ritira la candidatura
+                  </button>
                 )}
-              </Link>
+              </div>
             ))}
             {candidature.length === 0 && (
               <p className="text-sm text-fumo">Nessuna candidatura inviata.</p>

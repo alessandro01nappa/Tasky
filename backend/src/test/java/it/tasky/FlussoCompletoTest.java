@@ -430,6 +430,88 @@ class FlussoCompletoTest {
         assertThat(tolta.json().get("attivita")).hasSize(1);
     }
 
+    @Test
+    void ilClienteRitiraUnaRichiestaAncoraAperta() {
+        String cliente = registra("caso23-cliente");
+        long richiestaId = idDi(post("/api/richieste", corpoRichiesta(cliente, "Da ritirare"), cliente));
+
+        assertThat(post("/api/richieste/" + richiestaId + "/annulla", null, cliente).stato())
+                .isEqualTo(200);
+        assertThat(get("/api/richieste/" + richiestaId, cliente).json().get("stato").asString())
+                .isEqualTo("ANNULLATA");
+
+        // due volte no, e da un altro nemmeno
+        assertThat(post("/api/richieste/" + richiestaId + "/annulla", null, cliente).stato())
+                .isEqualTo(409);
+        String estraneo = registra("caso23-estraneo");
+        assertThat(post("/api/richieste/" + richiestaId + "/annulla", null, estraneo).stato())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void unLavoroCheSaltaSiPuoAnnullareDaEntrambiILati() {
+        Scenario s = scenario("caso24");
+        assertThat(post("/api/incarichi/" + s.incaricoId() + "/annulla", null, s.fornitore()).stato())
+                .isEqualTo(200);
+
+        assertThat(get("/api/incarichi/" + s.incaricoId(), s.cliente()).json().get("stato").asString())
+                .isEqualTo("ANNULLATO");
+        // la richiesta si chiude con lui: il cliente ne pubblica un'altra
+        assertThat(get("/api/richieste/" + s.richiestaId(), s.cliente()).json().get("stato").asString())
+                .isEqualTo("ANNULLATA");
+
+        assertThat(post("/api/incarichi/" + s.incaricoId() + "/annulla", null, s.cliente()).stato())
+                .isEqualTo(409);
+        assertThat(post("/api/incarichi/" + s.incaricoId() + "/annulla", null, registra("caso24-estraneo"))
+                        .stato())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void unLavoroConclusoNonSiAnnullaPiu() {
+        Scenario s = scenario("caso25");
+        put("/api/incarichi/" + s.incaricoId() + "/stato", "{\"stato\":\"IN_CORSO\"}", s.fornitore());
+        put("/api/incarichi/" + s.incaricoId() + "/stato", "{\"stato\":\"COMPLETATO\"}", s.fornitore());
+
+        assertThat(post("/api/incarichi/" + s.incaricoId() + "/annulla", null, s.fornitore()).stato())
+                .isEqualTo(409);
+    }
+
+    @Test
+    void ilFornitoreRitiraLaPropriaCandidatura() {
+        String cliente = registra("caso26-cliente");
+        String fornitore = registraFornitoreApprovato("caso26-fornitore");
+        long richiestaId = idDi(post("/api/richieste", corpoRichiesta(cliente, "Con candidatura"), cliente));
+        String percorso = "/api/richieste/" + richiestaId + "/candidature";
+        long candidaturaId = idDi(post(percorso, "{\"messaggio\":\"Disponibile\"}", fornitore));
+
+        // non e' di chi l'ha ricevuta
+        assertThat(invia("DELETE", percorso + "/" + candidaturaId, null, cliente).stato())
+                .isEqualTo(403);
+
+        assertThat(invia("DELETE", percorso + "/" + candidaturaId, null, fornitore).stato())
+                .isEqualTo(200);
+        assertThat(get(percorso, cliente).json()).isEmpty();
+
+        // ritirata, ci si puo' candidare di nuovo
+        assertThat(post(percorso, "{\"messaggio\":\"Ci ho ripensato\"}", fornitore).stato())
+                .isEqualTo(200);
+    }
+
+    @Test
+    void unaCandidaturaGiaDecisaNonSiRitira() {
+        Scenario s = scenario("caso27");
+        String percorso = "/api/richieste/" + s.richiestaId() + "/candidature/" + s.candidaturaId();
+
+        assertThat(invia("DELETE", percorso, null, s.fornitore()).stato()).isEqualTo(409);
+    }
+
+    private String corpoRichiesta(String token, String titolo) {
+        long categoriaId = get("/api/categorie", token).json().get(0).get("id").asLong();
+        return "{\"categoriaId\":" + categoriaId + ",\"titolo\":\"" + titolo
+                + "\",\"descrizione\":\"Descrizione\",\"citta\":\"Milano\"}";
+    }
+
     private Scenario scenario(String nome) {
         return scenarioConFornitore(nome, registraFornitoreApprovato(nome + "-fornitore"));
     }

@@ -281,6 +281,24 @@ public class RichiestaController {
         return RispostaRichiesta.pubblica(richieste.save(richiesta), null);
     }
 
+    /** Finche' nessuno ci sta lavorando il cliente puo' ritirare il suo annuncio. */
+    @PostMapping("/{id}/annulla")
+    @Transactional
+    public RispostaRichiesta annulla(@PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        RichiestaServizio richiesta = richieste
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
+        if (!richiesta.getCliente().getId().equals(utenteCorrente.da(token).getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non è una tua richiesta");
+        }
+        if (richiesta.getStato() != StatoRichiesta.APERTA) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Si può ritirare solo una richiesta ancora aperta");
+        }
+        richiesta.setStato(StatoRichiesta.ANNULLATA);
+        return RispostaRichiesta.da(richieste.save(richiesta));
+    }
+
     private ProfiloFornitore lavoratorePrenotabile(Long fornitoreId, Utente cliente) {
         ProfiloFornitore profilo = profili
                 .findById(fornitoreId)

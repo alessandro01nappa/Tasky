@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,6 +95,28 @@ public class CandidaturaController {
         candidatura.setMessaggio(nuova.messaggio());
         candidatura.setPrezzoOfferto(nuova.prezzoOfferto());
         return RispostaCandidatura.da(candidature.save(candidatura));
+    }
+
+    /** Ci si puo' ripensare, finche' il cliente non ha ancora scelto. */
+    @DeleteMapping("/{id}")
+    @Transactional
+    public void ritira(
+            @PathVariable Long richiestaId, @PathVariable Long id, @AuthenticationPrincipal Jwt token) {
+        Candidatura candidatura = candidature
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Candidatura non trovata"));
+        if (!candidatura.getRichiesta().getId().equals(richiestaId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Candidatura non trovata");
+        }
+        Long utenteId = utenteCorrente.da(token).getId();
+        if (!candidatura.getProfiloFornitore().getUtente().getId().equals(utenteId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non è una tua candidatura");
+        }
+        if (candidatura.getStato() != StatoCandidatura.IN_ATTESA) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Il cliente ha già deciso: non si può più ritirare");
+        }
+        candidature.delete(candidatura);
     }
 
     @GetMapping
