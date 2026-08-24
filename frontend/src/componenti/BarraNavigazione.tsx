@@ -1,6 +1,7 @@
-import { Compass, LayoutDashboard, ClipboardList, Search, User } from "lucide-react";
+import { ArrowLeftRight, Compass, LayoutDashboard, ClipboardList, Search, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useSonoLavoratore } from "../lib/lavoratore";
+import { useProfiloLavoratore, useSonoLavoratore } from "../lib/lavoratore";
+import { salvaModalita } from "../lib/modalita";
 
 const CLIENTE = [
   { etichetta: "Esplora", percorso: "/", Icona: Compass },
@@ -16,10 +17,13 @@ const LAVORATORE = [
 
 export default function BarraNavigazione() {
   const { pathname } = useLocation();
+  const profilo = useProfiloLavoratore();
   // il design cambia solo accento ed etichette: verde quando lavori, corallo quando cerchi
   const lavoratore = useSonoLavoratore();
   const voci = lavoratore ? LAVORATORE : CLIENTE;
   const accento = lavoratore ? "text-verde" : "text-corallo";
+  // il cambio si mostra solo a chi ha davvero un'altra parte dove andare
+  const puoCambiare = profilo?.stato === "APPROVATO";
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-bordo bg-white md:top-0 md:bottom-auto md:border-t-0 md:border-b">
@@ -41,6 +45,21 @@ export default function BarraNavigazione() {
             </Link>
           );
         })}
+
+        {puoCambiare && (
+          <button
+            type="button"
+            onClick={() => salvaModalita(lavoratore ? "cliente" : "lavoratore")}
+            className={`flex w-20 flex-col items-center gap-1.5 md:w-auto md:flex-row md:gap-2 ${
+              lavoratore ? "text-corallo" : "text-verde"
+            }`}
+          >
+            <ArrowLeftRight className="size-6 md:size-5" strokeWidth={1.75} />
+            <span className="text-xs font-medium md:text-sm">
+              {lavoratore ? "Cliente" : "Lavoratore"}
+            </span>
+          </button>
+        )}
       </div>
     </nav>
   );

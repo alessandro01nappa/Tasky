@@ -6,7 +6,7 @@ import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import { io, mieiIncarichi, type Incarico, type Io } from "../lib/api";
 import { scordaProfiloLavoratore, useProfiloLavoratore } from "../lib/lavoratore";
-import { cancellaModalita, salvaModalita, useModalita } from "../lib/modalita";
+import { cancellaModalita, useModalita } from "../lib/modalita";
 import { cancellaToken } from "../lib/sessione";
 
 const STATO_LAVORATORE: Record<string, string> = {
@@ -41,6 +41,10 @@ export default function Profilo() {
 
   const attivo = profilo?.stato === "APPROVATO";
   const inLavoratore = modalita === "lavoratore" && attivo;
+  // lo stesso incarico e' un lavoro da fare o un lavoro affidato, dipende da che lato stai
+  const suoiIncarichi = incarichi.filter((i) =>
+    inLavoratore ? i.ruolo === "FORNITORE" : i.ruolo === "CLIENTE",
+  );
   const iniziali = (utente?.nomeCompleto ?? "?")
     .split(" ")
     .slice(0, 2)
@@ -76,46 +80,27 @@ export default function Profilo() {
         </div>
       </div>
 
-      <div className="mt-5 rounded-3xl border border-bordo bg-white p-4">
-        <p className="text-lg font-semibold">
-          {inLavoratore ? "Torna alla modalità Cliente" : "Passa alla modalità Lavoratore"}
-        </p>
-        <p className="mt-2 text-sm text-fumo">
-          {inLavoratore
-            ? "Come cliente cerchi esperti e pubblichi richieste."
-            : "Come lavoratore vedi gli annunci in zona e ti candidi."}
-        </p>
+      {/* a lato attivo il cambio sta nella barra: qui resterebbe lo stesso comando due volte */}
+      {!attivo && (
+        <div className="mt-5 rounded-3xl border border-bordo bg-white p-4">
+          <p className="text-lg font-semibold">Passa alla modalità Lavoratore</p>
+          <p className="mt-2 text-sm text-fumo">
+            Come lavoratore vedi gli annunci in zona e ti candidi.
+          </p>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-fumo">
-            {profilo ? STATO_LAVORATORE[profilo.stato] : "Non attiva"}
-          </span>
-
-          {attivo ? (
-            <button
-              type="button"
-              onClick={() => salvaModalita(inLavoratore ? "cliente" : "lavoratore")}
-              aria-label="Cambia modalità"
-              className={`h-8 w-14 rounded-full p-1 transition-colors ${
-                inLavoratore ? "bg-verde" : "bg-bordo"
-              }`}
-            >
-              <span
-                className={`block size-6 rounded-full bg-white transition-transform ${
-                  inLavoratore ? "translate-x-6" : ""
-                }`}
-              />
-            </button>
-          ) : (
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-fumo">
+              {profilo ? STATO_LAVORATORE[profilo.stato] : "Non attiva"}
+            </span>
             <Link
               to="/diventa-lavoratore"
               className="flex h-10 items-center rounded-2xl bg-corallo px-4 text-sm font-semibold text-white"
             >
               {profilo ? "Completa il profilo" : "Attiva"}
             </Link>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {profilo?.stato === "IN_ATTESA" && (
         <div className="mt-3">
@@ -128,20 +113,24 @@ export default function Profilo() {
 
       <h2 className="mt-8 text-lg font-semibold">Le tue cose</h2>
       <div className="mt-3 flex flex-col gap-3">
-        <Link
-          to="/richieste"
-          className="flex items-center gap-3.5 rounded-3xl border border-bordo bg-white p-4"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pesca text-corallo">
-            <ClipboardList className="size-5" strokeWidth={1.75} />
-          </span>
-          <span>
-            <span className="block font-semibold">Le mie richieste</span>
-            <span className="block text-sm text-fumo">Annunci pubblicati e candidature ricevute</span>
-          </span>
-        </Link>
+        {!inLavoratore && (
+          <Link
+            to="/richieste"
+            className="flex items-center gap-3.5 rounded-3xl border border-bordo bg-white p-4"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pesca text-corallo">
+              <ClipboardList className="size-5" strokeWidth={1.75} />
+            </span>
+            <span>
+              <span className="block font-semibold">Le mie richieste</span>
+              <span className="block text-sm text-fumo">
+                Annunci pubblicati e candidature ricevute
+              </span>
+            </span>
+          </Link>
+        )}
 
-        {profilo && (
+        {profilo && inLavoratore && (
           <Link
             to="/diventa-lavoratore"
             className="flex items-center gap-3.5 rounded-3xl border border-bordo bg-white p-4"
@@ -160,22 +149,26 @@ export default function Profilo() {
           </Link>
         )}
 
-        {incarichi.length > 0 && (
+        {suoiIncarichi.length > 0 && (
           <div className="rounded-3xl border border-bordo bg-white p-4">
             <div className="flex items-center gap-3.5">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-miele text-ambra">
                 <Briefcase className="size-5" strokeWidth={1.75} />
               </span>
-              <p className="font-semibold">I miei incarichi</p>
+              <p className="font-semibold">
+                {inLavoratore ? "I lavori che seguo" : "I lavori che ho affidato"}
+              </p>
             </div>
             <div className="mt-3 flex flex-col gap-2">
-              {incarichi.map((i) => (
+              {suoiIncarichi.map((i) => (
                 <Link
                   key={i.id}
                   to={`/incarichi/${i.id}`}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-bordo px-3.5 py-3"
                 >
-                  <span className="min-w-0 truncate text-sm font-semibold">{i.titoloRichiesta}</span>
+                  <span className="min-w-0 truncate text-sm font-semibold">
+                    {i.titoloRichiesta}
+                  </span>
                   <span className="shrink-0 rounded-full bg-sabbia px-2.5 py-1 text-xs font-semibold text-fumo">
                     {i.stato.toLowerCase().replace("_", " ")}
                   </span>
