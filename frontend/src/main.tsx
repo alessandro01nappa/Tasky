@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RottaProtetta from "./componenti/RottaProtetta";
+import SoloModalita from "./componenti/SoloModalita";
 import { useSonoLavoratore } from "./lib/lavoratore";
 import Accesso from "./pagine/Accesso";
 import DashboardLavoratore from "./pagine/DashboardLavoratore";
@@ -58,7 +59,9 @@ createRoot(document.getElementById("root")!).render(
           path="/professionisti"
           element={
             <RottaProtetta>
-              <ElencoProfessionisti />
+              <SoloModalita lavoratore={false}>
+                <ElencoProfessionisti />
+              </SoloModalita>
             </RottaProtetta>
           }
         />
@@ -74,7 +77,9 @@ createRoot(document.getElementById("root")!).render(
           path="/richieste"
           element={
             <RottaProtetta>
-              <MieRichieste />
+              <SoloModalita lavoratore={false}>
+                <MieRichieste />
+              </SoloModalita>
             </RottaProtetta>
           }
         />
@@ -82,7 +87,9 @@ createRoot(document.getElementById("root")!).render(
           path="/lavoratore"
           element={
             <RottaProtetta>
-              <DashboardLavoratore />
+              <SoloModalita lavoratore={true}>
+                <DashboardLavoratore />
+              </SoloModalita>
             </RottaProtetta>
           }
         />
@@ -90,7 +97,9 @@ createRoot(document.getElementById("root")!).render(
           path="/richieste/nuova"
           element={
             <RottaProtetta>
-              <NuovaRichiesta />
+              <SoloModalita lavoratore={false}>
+                <NuovaRichiesta />
+              </SoloModalita>
             </RottaProtetta>
           }
         />
