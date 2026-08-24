@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CampoLuogo from "../componenti/CampoLuogo";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
@@ -14,11 +15,14 @@ import {
   type Lavoratore,
   type Luogo,
 } from "../lib/api";
+import { usePosizioneCliente } from "../lib/posizione";
 
 const PASSI = ["Titolo", "Dettagli", "Budget", "Data"];
 
 export default function NuovaRichiesta() {
   const navigate = useNavigate();
+  // la città del cliente aiuta a mettere in cima le vie giuste
+  const posizione = usePosizioneCliente();
   const [parametri] = useSearchParams();
   const fornitoreId = parametri.get("fornitore");
 
@@ -97,7 +101,12 @@ export default function NuovaRichiesta() {
 
   return (
     <Pagina>
-      <h1 className="text-3xl font-bold">{prenotato ? "Prenota" : "Nuova richiesta"}</h1>
+      <Link to="/" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
+        <ArrowLeft className="size-4" strokeWidth={2.25} />
+        Torna alla home
+      </Link>
+
+      <h1 className="mt-4 text-3xl font-bold">{prenotato ? "Prenota" : "Nuova richiesta"}</h1>
       <p className="mt-1 text-sm font-medium text-fumo">
         {prenotato ? `La richiesta va solo a ${prenotato.nome}` : "Pubblica in pochi passi"}
       </p>
@@ -216,6 +225,7 @@ export default function NuovaRichiesta() {
               etichetta="Via"
               aiuto="Scegli la via dall'elenco. L'indirizzo lo vedrai solo tu, finché non assegni il lavoro."
               segnaposto="Via del Corso, Roma"
+              vicinoA={posizione}
               scelto={via}
               onScelto={(luogo) => {
                 setVia(luogo);

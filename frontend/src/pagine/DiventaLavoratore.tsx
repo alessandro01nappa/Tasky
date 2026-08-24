@@ -50,6 +50,7 @@ export default function DiventaLavoratore() {
       setLuogoZona({
         latitudine: profilo.latitudine,
         longitudine: profilo.longitudine,
+        nome: profilo.zonaOperativa,
         indirizzo: profilo.zonaOperativa,
         citta: profilo.zonaOperativa,
       });

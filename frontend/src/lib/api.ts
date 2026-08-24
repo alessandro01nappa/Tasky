@@ -196,13 +196,20 @@ export function richiesteAperte(entroKm?: number) {
 export type Luogo = {
   latitudine: number;
   longitudine: number;
+  /** La via col civico, o il nome del comune: è quello che si mostra dopo la scelta. */
+  nome: string | null;
   indirizzo: string;
   citta: string | null;
 };
 
 /** I posti che somigliano a quello che si sta scrivendo, da far scegliere. */
-export function suggerisciLuoghi(testo: string) {
-  return chiama<Luogo[]>(`/api/luoghi/suggerimenti?testo=${encodeURIComponent(testo)}`);
+export function suggerisciLuoghi(testo: string, vicinoA?: { latitudine: number; longitudine: number }) {
+  const parametri = new URLSearchParams({ testo });
+  if (vicinoA) {
+    parametri.set("lat", String(vicinoA.latitudine));
+    parametri.set("lon", String(vicinoA.longitudine));
+  }
+  return chiama<Luogo[]>(`/api/luoghi/suggerimenti?${parametri}`);
 }
 
 /** Chiede al backend di tradurre un indirizzo scritto a mano in un punto sulla mappa. */

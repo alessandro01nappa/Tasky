@@ -80,6 +80,7 @@ export default function ElencoProfessionisti() {
           <CampoLuogo
             segnaposto="Da dove cerchi? Roma, Milano…"
             scelto={dove}
+            vicinoA={miaCitta ?? null}
             onScelto={setDove}
           />
         </div>
