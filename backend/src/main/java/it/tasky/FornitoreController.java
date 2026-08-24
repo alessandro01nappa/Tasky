@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -146,7 +147,10 @@ public class FornitoreController {
 
     public record RecensioniFornitore(double media, int numero, List<VoceRecensione> recensioni) {}
 
+    // senza transazione il profilo si stacca e viene riunito al database due volte:
+    // la seconda volta i lavori gia' salvati venivano reinseriti, e il salvataggio falliva
     @PostMapping
+    @Transactional
     public RispostaFornitore crea(@Valid @RequestBody DatiFornitore dati, @AuthenticationPrincipal Jwt token) {
         Utente utente = utenteCorrente.da(token);
         if (profili.findByUtenteId(utente.getId()).isPresent()) {
@@ -166,6 +170,7 @@ public class FornitoreController {
     }
 
     @PutMapping
+    @Transactional
     public RispostaFornitore aggiorna(@Valid @RequestBody DatiFornitore dati, @AuthenticationPrincipal Jwt token) {
         ProfiloFornitore profilo = profiloMio(token);
         applica(dati, profilo);
@@ -272,6 +277,8 @@ public class FornitoreController {
         List<Long> categorieCoperte =
                 profilo.getCategorie().stream().map(CategoriaServizio::getId).toList();
         tariffe.deleteAll(tariffe.findByProfiloFornitoreId(profilo.getId()));
+        // le vecchie righe vanno tolte davvero prima di riscriverle, o si scontrano sulla stessa categoria
+        tariffe.flush();
         if (dati.tariffe() == null) {
             return;
         }

@@ -404,6 +404,32 @@ class FlussoCompletoTest {
     private record Risposta(int stato, String corpo, JsonNode json) {}
 
     /** Cliente con richiesta, fornitore approvato candidato e gia' selezionato: incarico ASSEGNATO. */
+    @Test
+    void ilLavoratorePuoAggiungereUnLavoroAlProprioProfilo() {
+        String token = registra("caso22-fornitore");
+        long categoriaId = get("/api/categorie", token).json().get(0).get("id").asLong();
+        JsonNode voci = get("/api/categorie/" + categoriaId + "/attivita", token).json();
+        long primo = voci.get(0).get("id").asLong();
+        long secondo = voci.get(1).get("id").asLong();
+
+        String corpo = "{\"descrizione\":\"Esperienza\",\"zonaOperativa\":\"Milano\""
+                + ",\"terminiAccettati\":true,\"tariffe\":[{\"categoriaId\":" + categoriaId
+                + ",\"tariffaOraria\":25}],\"attivitaIds\":";
+
+        assertThat(post("/api/fornitore", corpo + "[" + primo + "]}", token).stato())
+                .isEqualTo(200);
+
+        // aggiungerne uno secondo non deve rompere: e' la modifica piu' comune del profilo
+        Risposta aggiunta = put("/api/fornitore", corpo + "[" + primo + "," + secondo + "]}", token);
+        assertThat(aggiunta.stato()).isEqualTo(200);
+        assertThat(aggiunta.json().get("attivita")).hasSize(2);
+
+        // e toglierlo deve riportare il profilo com'era
+        Risposta tolta = put("/api/fornitore", corpo + "[" + primo + "]}", token);
+        assertThat(tolta.stato()).isEqualTo(200);
+        assertThat(tolta.json().get("attivita")).hasSize(1);
+    }
+
     private Scenario scenario(String nome) {
         return scenarioConFornitore(nome, registraFornitoreApprovato(nome + "-fornitore"));
     }
@@ -502,6 +528,10 @@ class FlussoCompletoTest {
 
     private Risposta get(String percorso, String token) {
         return invia("GET", percorso, null, token);
+    }
+
+    private Risposta put(String percorso, String corpo, String token) {
+        return invia("PUT", percorso, corpo, token);
     }
 
     private Risposta invia(String metodo, String percorso, String corpo, String token) {
