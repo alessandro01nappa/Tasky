@@ -243,13 +243,13 @@ export default function DettaglioRichiesta() {
         <div className="mt-5 rounded-3xl border border-bordo bg-white p-5">
           <p className="text-xl font-semibold">Vuoi candidarti?</p>
           <p className="mt-1.5 text-sm text-fumo">
-            Serve un profilo lavoratore. Si crea in un minuto, poi va approvato.
+            Serve un profilo Tasker. Si crea in un minuto, poi va approvato.
           </p>
           <Link
             to="/diventa-lavoratore"
             className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-corallo text-sm font-semibold text-white"
           >
-            Diventa lavoratore
+            Diventa Tasker
           </Link>
         </div>
       )}
@@ -257,7 +257,7 @@ export default function DettaglioRichiesta() {
       {!mia && dati.stato === "APERTA" && profiloLavoratore?.stato === "IN_ATTESA" && (
         <div className="mt-5">
           <RiquadroInfo>
-            Il tuo profilo lavoratore è in attesa di approvazione: potrai candidarti appena viene
+            Il tuo profilo Tasker è in attesa di approvazione: potrai candidarti appena viene
             approvato.
           </RiquadroInfo>
         </div>

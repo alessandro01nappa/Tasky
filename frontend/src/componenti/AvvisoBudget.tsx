@@ -20,7 +20,7 @@ export default function AvvisoBudget({ budget, prezzi }: Props) {
     return (
       <Riquadro Icona={Info} colore="bg-sabbia text-fumo">
         Su Tasky non ci sono ancora abbastanza lavori conclusi per {suCosa}: metti la cifra che
-        ritieni giusta, i lavoratori possono farti una proposta diversa.
+        ritieni giusta, i Tasker possono farti una proposta diversa.
       </Riquadro>
     );
   }

@@ -77,7 +77,7 @@ export default function Profilo() {
               inLavoratore ? "bg-verde-chiaro text-verde" : "bg-pesca text-corallo"
             }`}
           >
-            Modalità {inLavoratore ? "Lavoratore" : "Cliente"}
+            {inLavoratore ? "Tasker" : "Cliente"}
           </span>
         </div>
       </div>
@@ -85,9 +85,9 @@ export default function Profilo() {
       {/* a lato attivo il cambio sta nella barra: qui resterebbe lo stesso comando due volte */}
       {!attivo && (
         <div className="mt-5 rounded-3xl border border-bordo bg-white p-4">
-          <p className="text-lg font-semibold">Passa alla modalità Lavoratore</p>
+          <p className="text-lg font-semibold">Diventa un Tasker</p>
           <p className="mt-2 text-sm text-fumo">
-            Come lavoratore vedi gli annunci in zona e ti candidi.
+            Come Tasker vedi gli annunci in zona e ti candidi.
           </p>
 
           <div className="mt-4 flex items-center justify-between gap-3">
@@ -141,7 +141,7 @@ export default function Profilo() {
               <User className="size-5" strokeWidth={1.75} />
             </span>
             <span>
-              <span className="block font-semibold">Profilo lavoratore</span>
+              <span className="block font-semibold">Profilo Tasker</span>
               <span className="block text-sm text-fumo">
                 {profilo.attivita.length > 0
                   ? `${profilo.attivita.length} lavori • ${profilo.zonaOperativa}`

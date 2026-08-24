@@ -58,7 +58,7 @@ export default function Accesso() {
           <div>
             <p className="text-xl font-semibold">Accedi al tuo account</p>
             <p className="mt-1 text-sm text-fumo">
-              Hai già un profilo cliente o lavoratore? Entra da qui.
+              Hai già un profilo cliente o Tasker? Entra da qui.
             </p>
           </div>
 
@@ -111,7 +111,7 @@ export default function Accesso() {
         <div className="pb-12">
           <p className="text-sm font-medium text-fumo">Nuovo qui?</p>
           <p className="mt-1 text-sm">
-            Crea un account e poi, dal profilo, passa alla modalità Lavoratore quando vuoi.
+            Crea un account e poi, dal profilo, diventa Tasker quando vuoi.
           </p>
         </div>
       </div>

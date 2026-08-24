@@ -179,7 +179,7 @@ export default function NuovaRichiesta() {
         <div className="mt-5">
           <RiquadroInfo>
             Se {prenotato.nome.split(" ")[0]} rifiuta, la richiesta diventa pubblica e gli altri
-            lavoratori potranno candidarsi.
+            Tasker potranno candidarsi.
           </RiquadroInfo>
         </div>
       )}

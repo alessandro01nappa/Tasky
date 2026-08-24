@@ -37,7 +37,7 @@ export default function InterruttoreModalita({ acceso }: Props) {
       <span
         className={`text-xs md:text-sm ${acceso ? "font-semibold text-verde" : "font-medium text-fumo"}`}
       >
-        Lavoratore
+        Tasker
       </span>
     </button>
   );

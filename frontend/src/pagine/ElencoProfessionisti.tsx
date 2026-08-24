@@ -146,7 +146,7 @@ export default function ElencoProfessionisti() {
             testo={
               cerca
                 ? "Nessuno corrisponde a questa ricerca. Prova con un altro lavoro o categoria."
-                : "Nessun lavoratore approvato qui per ora. Pubblica una richiesta e lascia arrivare le proposte."
+                : "Nessun Tasker approvato qui per ora. Pubblica una richiesta e lascia arrivare le proposte."
             }
             azione={{ etichetta: "Pubblica richiesta", percorso: "/richieste/nuova" }}
           />

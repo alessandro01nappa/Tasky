@@ -134,7 +134,7 @@ export default function DiventaLavoratore() {
 
   return (
     <Pagina>
-      <h1 className="text-3xl font-bold">{modifica ? "Il tuo profilo lavoratore" : "Diventa lavoratore"}</h1>
+      <h1 className="text-3xl font-bold">{modifica ? "Il tuo profilo Tasker" : "Diventa un Tasker"}</h1>
       <p className="mt-2 text-base text-fumo">
         {modifica
           ? "Aggiorna descrizione, zona e lavori che svolgi."
@@ -293,7 +293,7 @@ export default function DiventaLavoratore() {
           disabled={inCorso}
           className="h-12 rounded-2xl bg-corallo text-sm font-semibold text-white"
         >
-          {modifica ? "Salva modifiche" : "Crea profilo lavoratore"}
+          {modifica ? "Salva modifiche" : "Crea profilo Tasker"}
         </button>
 
         <button

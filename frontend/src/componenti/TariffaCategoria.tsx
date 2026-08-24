@@ -69,9 +69,9 @@ export default function TariffaCategoria({ categoriaId, categoria, valore, onCam
         <p className="mt-2.5 text-xs text-fumo">
           {mercato && mercato.quanti > 0
             ? mercato.quanti === 1
-              ? "C'è un solo altro lavoratore in questa categoria: troppo poco per un confronto."
-              : `Solo ${mercato.quanti} lavoratori in questa categoria: troppo pochi per un confronto.`
-            : "Nessun altro lavoratore in questa categoria: sei tu a fare il prezzo."}
+              ? "C'è un solo altro Tasker in questa categoria: troppo poco per un confronto."
+              : `Solo ${mercato.quanti} Tasker in questa categoria: troppo pochi per un confronto.`
+            : "Nessun altro Tasker in questa categoria: sei tu a fare il prezzo."}
         </p>
       )}
 

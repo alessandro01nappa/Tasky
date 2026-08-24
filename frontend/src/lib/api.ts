@@ -1,7 +1,7 @@
 import { cancellaToken, leggiToken } from "./sessione";
 
-// I testi mostrati all'utente dicono "lavoratore", come il design.
-// Codice, API e database dicono "fornitore", come il backend.
+// Chi svolge i lavori si chiama "Tasker" nei testi mostrati all'utente,
+// "lavoratore" nel codice di questa app e "fornitore" nel backend e nel database.
 
 export type TipoLavoratore = "PROFESSIONISTA" | "HOBBISTA";
 

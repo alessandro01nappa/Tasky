@@ -88,12 +88,12 @@ export default function DettaglioIncarico() {
       <h1 className="mt-4 text-3xl font-bold">{dati.titoloRichiesta}</h1>
       <p className="mt-1 text-sm font-medium text-fumo">
         {dati.stato.toLowerCase().replace("_", " ")} • sei il{" "}
-        {sonoIlLavoratore ? "lavoratore" : "cliente"}
+        {sonoIlLavoratore ? "Tasker" : "cliente"}
       </p>
 
       <div className="mt-5 rounded-3xl border border-bordo bg-white p-5">
         <p className="text-sm">
-          Lavoratore: <span className="font-semibold">{dati.fornitore}</span>
+          Tasker: <span className="font-semibold">{dati.fornitore}</span>
         </p>
         {dati.prezzoConcordato != null && (
           <p className="mt-2 text-sm">Prezzo concordato: {dati.prezzoConcordato} €</p>

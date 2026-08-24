@@ -44,7 +44,7 @@ export default function Registrazione() {
         <div>
           <h1 className="text-3xl font-bold">Crea il tuo account</h1>
           <p className="mt-2 text-base text-fumo">
-            Inizia come cliente e passa alla modalità Lavoratore dal profilo quando vuoi.
+            Inizia come cliente e diventa Tasker dal profilo quando vuoi.
           </p>
         </div>
 

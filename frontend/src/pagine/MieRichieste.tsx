@@ -181,7 +181,7 @@ export default function MieRichieste() {
             titolo={filtro === "APERTA" ? "Nessuna richiesta aperta" : "Niente in questo stato"}
             testo={
               filtro === "APERTA"
-                ? "Pubblica un annuncio e ricevi proposte dai lavoratori della tua zona."
+                ? "Pubblica un annuncio e ricevi proposte dai Tasker della tua zona."
                 : "Qui compariranno le richieste quando raggiungeranno questo stato."
             }
             azione={
