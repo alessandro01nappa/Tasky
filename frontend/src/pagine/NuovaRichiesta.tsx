@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import AvvisoBudget from "../componenti/AvvisoBudget";
 import CampoLuogo from "../componenti/CampoLuogo";
 import IconaCategoria from "../componenti/IconaCategoria";
 import Pagina from "../componenti/Pagina";
@@ -10,10 +11,12 @@ import {
   categorie,
   creaRichiesta,
   elencoLavoratori,
+  prezziDiRiferimento,
   type Attivita,
   type Categoria,
   type Lavoratore,
   type Luogo,
+  type PrezziDiRiferimento,
 } from "../lib/api";
 import { usePosizioneCliente } from "../lib/posizione";
 
@@ -41,6 +44,7 @@ export default function NuovaRichiesta() {
   const [budget, setBudget] = useState("");
   const [preventivo, setPreventivo] = useState(false);
   const [dataPreferita, setDataPreferita] = useState("");
+  const [prezzi, setPrezzi] = useState<PrezziDiRiferimento | null>(null);
   const [errore, setErrore] = useState("");
   const [inCorso, setInCorso] = useState(false);
 
@@ -67,6 +71,13 @@ export default function NuovaRichiesta() {
       .then(setAttivita)
       .catch(() => setAttivita([]));
   }, [categoriaId]);
+
+  useEffect(() => {
+    if (categoriaId === null) return;
+    prezziDiRiferimento(categoriaId, attivitaId ?? undefined)
+      .then(setPrezzi)
+      .catch(() => setPrezzi(null));
+  }, [categoriaId, attivitaId]);
 
   const completo = [
     categoriaId !== null && titolo.trim() !== "",
@@ -248,6 +259,7 @@ export default function NuovaRichiesta() {
       )}
 
       {passo === 2 && (
+        <>
         <div className="mt-5 flex gap-3">
           <div className="flex-1 rounded-3xl border border-bordo bg-white p-5 shadow-morbida">
             <p className="text-sm font-semibold text-fumo">Budget €</p>
@@ -277,6 +289,13 @@ export default function NuovaRichiesta() {
             <span className="mt-2 block text-lg font-semibold">Richiedi preventivo</span>
           </button>
         </div>
+
+        {!preventivo && (
+          <div className="mt-3">
+            <AvvisoBudget budget={budget ? Number(budget) : null} prezzi={prezzi} />
+          </div>
+        )}
+        </>
       )}
 
       {passo === 3 && (

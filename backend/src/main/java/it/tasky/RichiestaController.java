@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +32,9 @@ public class RichiestaController {
     private final AttivitaServizioRepository attivita;
     private final UtenteCorrente utenteCorrente;
     private final Geocodifica geocodifica;
+
+    /** Sotto questi casi una media non dice niente e non va mostrata. */
+    private static final int CASI_MINIMI = 3;
 
     public RichiestaController(
             RichiestaServizioRepository richieste,
@@ -178,6 +182,45 @@ public class RichiestaController {
             richiesta.setAttivita(scelta);
         }
         return RispostaRichiesta.da(richieste.save(richiesta));
+    }
+
+    /**
+     * Quanto sono costati davvero lavori come questo. Serve al cliente per capire
+     * se quello che sta offrendo e' in linea, prima di pubblicare.
+     */
+    public record PrezziDiRiferimento(
+            int quanti, String base, BigDecimal media, BigDecimal minimo, BigDecimal massimo) {}
+
+    @GetMapping("/prezzi")
+    public PrezziDiRiferimento prezzi(
+            @RequestParam Long categoriaId, @RequestParam(required = false) Long attivitaId) {
+        // il lavoro preciso dice di piu' della categoria, ma solo se ci sono abbastanza casi
+        if (attivitaId != null) {
+            PrezziDiRiferimento sulLavoro = riassumi(
+                    incarichi.findByStatoAndRichiestaAttivitaId(StatoIncarico.COMPLETATO, attivitaId),
+                    "attivita");
+            if (sulLavoro.quanti() >= CASI_MINIMI) {
+                return sulLavoro;
+            }
+        }
+        return riassumi(
+                incarichi.findByStatoAndRichiestaCategoriaId(StatoIncarico.COMPLETATO, categoriaId),
+                "categoria");
+    }
+
+    private static PrezziDiRiferimento riassumi(List<Incarico> conclusi, String base) {
+        List<BigDecimal> prezzi = conclusi.stream()
+                .map(Incarico::getPrezzoConcordato)
+                .filter(p -> p != null && p.signum() > 0)
+                .sorted()
+                .toList();
+        if (prezzi.size() < CASI_MINIMI) {
+            return new PrezziDiRiferimento(prezzi.size(), base, null, null, null);
+        }
+        BigDecimal somma = prezzi.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal media = somma.divide(BigDecimal.valueOf(prezzi.size()), 0, RoundingMode.HALF_UP);
+        return new PrezziDiRiferimento(
+                prezzi.size(), base, media, prezzi.get(0), prezzi.get(prezzi.size() - 1));
     }
 
     @GetMapping

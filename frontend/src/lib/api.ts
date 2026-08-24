@@ -241,6 +241,21 @@ export function creaRichiesta(dati: {
   return invia<Richiesta>("/api/richieste", "POST", dati);
 }
 
+export type PrezziDiRiferimento = {
+  quanti: number;
+  /** "attivita" se il confronto è sul lavoro preciso, "categoria" se è più largo. */
+  base: "attivita" | "categoria";
+  media: number | null;
+  minimo: number | null;
+  massimo: number | null;
+};
+
+export function prezziDiRiferimento(categoriaId: number, attivitaId?: number) {
+  const parametri = new URLSearchParams({ categoriaId: String(categoriaId) });
+  if (attivitaId) parametri.set("attivitaId", String(attivitaId));
+  return chiama<PrezziDiRiferimento>(`/api/richieste/prezzi?${parametri}`);
+}
+
 export function richiesteDirette() {
   return chiama<Richiesta[]>("/api/richieste/dirette");
 }
