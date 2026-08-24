@@ -151,12 +151,15 @@ public class RichiestaController {
         richiesta.setDescrizione(nuova.descrizione());
         richiesta.setCitta(nuova.citta());
         richiesta.setIndirizzo(nuova.indirizzo());
-        // se l'indirizzo non si trova la richiesta esiste lo stesso, semplicemente non finisce sulla mappa
-        geocodifica.cerca(nuova.indirizzo() == null ? null : nuova.indirizzo() + ", " + nuova.citta())
-                .ifPresent(punto -> {
-                    richiesta.setLatitudine(punto.latitudine());
-                    richiesta.setLongitudine(punto.longitudine());
-                });
+        // senza indirizzo si ripiega sulla citta': meglio un punto approssimativo che niente mappa.
+        // se non si trova nemmeno quella la richiesta esiste lo stesso, solo fuori dalla mappa.
+        String daCercare = nuova.indirizzo() == null || nuova.indirizzo().isBlank()
+                ? nuova.citta()
+                : nuova.indirizzo() + ", " + nuova.citta();
+        geocodifica.cerca(daCercare).ifPresent(punto -> {
+            richiesta.setLatitudine(punto.latitudine());
+            richiesta.setLongitudine(punto.longitudine());
+        });
         richiesta.setBudget(nuova.budget());
         richiesta.setDataPreferita(nuova.dataPreferita());
         if (nuova.attivitaId() != null) {
