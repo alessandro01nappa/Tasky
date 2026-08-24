@@ -66,7 +66,7 @@ export default function Profilo() {
         >
           {iniziali}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-lg font-semibold">{utente?.nomeCompleto ?? "…"}</p>
           <p className="mt-1 text-sm text-fumo">
             {utente?.email}
@@ -80,6 +80,12 @@ export default function Profilo() {
             {inLavoratore ? "Tasker" : "Cliente"}
           </span>
         </div>
+        <Link
+          to="/profilo/modifica"
+          className="shrink-0 self-start text-sm font-semibold text-corallo"
+        >
+          Modifica
+        </Link>
       </div>
 
       {/* a lato attivo il cambio sta nella barra: qui resterebbe lo stesso comando due volte */}

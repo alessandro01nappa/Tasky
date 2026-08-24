@@ -17,6 +17,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,7 +56,10 @@ public class AutenticazioneController {
 
     public record RispostaToken(String token) {}
 
-    public record Io(String email, String nomeCompleto, String citta) {}
+    public record Io(String email, String nomeCompleto, String telefono, String citta) {}
+
+    /** L'email non si cambia: e' con quella che si entra. */
+    public record DatiMiei(@NotBlank String nomeCompleto, String telefono, String citta) {}
 
     @PostMapping("/registrazione")
     public RispostaToken registrazione(@Valid @RequestBody RegistrazioneRichiesta richiesta) {
@@ -84,7 +89,29 @@ public class AutenticazioneController {
         Utente utente = utenti
                 .findByEmail(token.getSubject())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
-        return new Io(utente.getEmail(), utente.getNomeCompleto(), utente.getCitta());
+        return descrivi(utente);
+    }
+
+    /** Nome, telefono e citta' si sceglievano solo alla registrazione: ora si correggono. */
+    @PutMapping("/io")
+    @Transactional
+    public Io aggiornaIo(@Valid @RequestBody DatiMiei dati, @AuthenticationPrincipal Jwt token) {
+        Utente utente = utenti
+                .findByEmail(token.getSubject())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+        utente.setNomeCompleto(dati.nomeCompleto());
+        utente.setTelefono(vuotoComeAssente(dati.telefono()));
+        utente.setCitta(vuotoComeAssente(dati.citta()));
+        return descrivi(utenti.save(utente));
+    }
+
+    private static String vuotoComeAssente(String valore) {
+        return valore == null || valore.isBlank() ? null : valore.trim();
+    }
+
+    private static Io descrivi(Utente utente) {
+        return new Io(
+                utente.getEmail(), utente.getNomeCompleto(), utente.getTelefono(), utente.getCitta());
     }
 
     private String creaToken(Utente utente) {

@@ -15,6 +15,7 @@ import MieRichieste from "./pagine/MieRichieste";
 import NuovaRichiesta from "./pagine/NuovaRichiesta";
 import DiventaLavoratore from "./pagine/DiventaLavoratore";
 import Permessi from "./pagine/Permessi";
+import ModificaProfilo from "./pagine/ModificaProfilo";
 import Profilo from "./pagine/Profilo";
 import ProfiloLavoratore from "./pagine/ProfiloLavoratore";
 import Registrazione from "./pagine/Registrazione";
@@ -116,6 +117,14 @@ createRoot(document.getElementById("root")!).render(
           element={
             <RottaProtetta>
               <DettaglioIncarico />
+            </RottaProtetta>
+          }
+        />
+        <Route
+          path="/profilo/modifica"
+          element={
+            <RottaProtetta>
+              <ModificaProfilo />
             </RottaProtetta>
           }
         />

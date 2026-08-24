@@ -176,11 +176,16 @@ export function login(dati: { email: string; password: string }) {
 export type Io = {
   email: string;
   nomeCompleto: string;
+  telefono: string | null;
   citta: string | null;
 };
 
 export function io() {
   return chiama<Io>("/api/io");
+}
+
+export function aggiornaIo(dati: { nomeCompleto: string; telefono: string; citta: string }) {
+  return invia<Io>("/api/io", "PUT", dati);
 }
 
 export function categorie() {
