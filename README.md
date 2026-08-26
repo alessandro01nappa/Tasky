@@ -20,26 +20,7 @@ e da fornitore quando si candida — ma solo dopo aver completato la verifica.
 ```
 Tasky/
 ├── backend/             API REST in Spring Boot
-├── frontend/            applicazione React (da creare)
+├── frontend/            React 
 ├── docs/                diagrammi
-└── docker-compose.yml   PostgreSQL per lo sviluppo
+└── docker-compose.yml   PostgreSQL
 ```
-
-## Avvio
-
-Il backend firma le sessioni con una chiave presa dall'ambiente. Senza, ne genera
-una a caso a ogni avvio e chi ha fatto l'accesso deve rifarlo dopo ogni riavvio.
-
-```
-export TASKY_JWT_SEGRETO="una-frase-lunga-almeno-32-caratteri"
-docker compose up -d
-cd backend && mvn spring-boot:run
-cd frontend && npm run dev
-```
-
-## Modello dati
-
-Otto tabelle. Diagramma completo su [drawSQL](https://drawsql.app/teams/alessandro-nappa/diagrams/tasky),
-esportato anche in [docs/modello-dati.webp](docs/modello-dati.webp).
-
-![Modello dati di Tasky](docs/modello-dati.webp)
