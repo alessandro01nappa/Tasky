@@ -37,6 +37,15 @@ cd backend && mvn spring-boot:run
 cd frontend && npm run dev
 ```
 
+## Schema del database
+
+Lo schema lo fanno le migrazioni in `backend/src/main/resources/db/migration`,
+non Hibernate: all'avvio Flyway applica quelle che mancano e Hibernate si limita
+a controllare che le tabelle corrispondano alle entità, fermandosi se non è così.
+
+Per cambiare lo schema si aggiunge un file nuovo, `V2__cosa_cambia.sql`. I file
+già applicati non si toccano più: Flyway se ne accorge e si rifiuta di partire.
+
 ## Modello dati
 
 Otto tabelle. Diagramma completo su [drawSQL](https://drawsql.app/teams/alessandro-nappa/diagrams/tasky),
