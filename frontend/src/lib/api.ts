@@ -149,7 +149,8 @@ async function chiama<T>(percorso: string, opzioni: RequestInit = {}): Promise<T
 async function messaggioErrore(risposta: Response) {
   try {
     const corpo = await risposta.json();
-    return corpo.message || corpo.error || `Errore ${risposta.status}`;
+    // "detail" è dove il backend mette il motivo vero; gli altri sono ripieghi
+    return corpo.detail || corpo.message || corpo.error || `Errore ${risposta.status}`;
   } catch {
     return `Errore ${risposta.status}`;
   }

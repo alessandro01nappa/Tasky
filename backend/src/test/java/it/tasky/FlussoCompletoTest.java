@@ -287,8 +287,11 @@ class FlussoCompletoTest {
         Risposta inesistente = get("/api/richieste/999999", estraneo);
 
         assertThat(negata.stato()).isEqualTo(inesistente.stato());
-        assertThat(negata.json().get("error").asString())
-                .isEqualTo(inesistente.json().get("error").asString());
+        // stesso stato e stessa spiegazione: da fuori non si capisce quale delle due sia
+        assertThat(negata.json().get("title").asString())
+                .isEqualTo(inesistente.json().get("title").asString());
+        assertThat(negata.json().get("detail").asString())
+                .isEqualTo(inesistente.json().get("detail").asString());
     }
 
     @Test

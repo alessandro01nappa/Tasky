@@ -29,6 +29,13 @@ public class Utente {
 
     private String citta;
 
+    /** Un account sospeso non entra e non compare: lo decide un amministratore. */
+    @Column(columnDefinition = "boolean default false")
+    private boolean sospeso = false;
+
+    @Column(length = 300)
+    private String motivoSospensione;
+
     private LocalDateTime dataCreazione = LocalDateTime.now();
 
     public Long getId() {
@@ -73,6 +80,22 @@ public class Utente {
 
     public void setCitta(String citta) {
         this.citta = citta;
+    }
+
+    public boolean isSospeso() {
+        return sospeso;
+    }
+
+    public void setSospeso(boolean sospeso) {
+        this.sospeso = sospeso;
+    }
+
+    public String getMotivoSospensione() {
+        return motivoSospensione;
+    }
+
+    public void setMotivoSospensione(String motivoSospensione) {
+        this.motivoSospensione = motivoSospensione;
     }
 
     public LocalDateTime getDataCreazione() {

@@ -33,16 +33,19 @@ public class AutenticazioneController {
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
     private final Duration durataToken;
+    private final Amministratori amministratori;
 
     public AutenticazioneController(
             UtenteRepository utenti,
             PasswordEncoder passwordEncoder,
             JwtEncoder jwtEncoder,
-            @Value("${tasky.jwt.durata-minuti}") long durataMinuti) {
+            @Value("${tasky.jwt.durata-minuti}") long durataMinuti,
+            Amministratori amministratori) {
         this.utenti = utenti;
         this.passwordEncoder = passwordEncoder;
         this.jwtEncoder = jwtEncoder;
         this.durataToken = Duration.ofMinutes(durataMinuti);
+        this.amministratori = amministratori;
     }
 
     public record RegistrazioneRichiesta(
@@ -56,7 +59,12 @@ public class AutenticazioneController {
 
     public record RispostaToken(String token) {}
 
-    public record Io(String email, String nomeCompleto, String telefono, String citta) {}
+    public record Io(
+            String email,
+            String nomeCompleto,
+            String telefono,
+            String citta,
+            boolean amministratore) {}
 
     /** L'email non si cambia: e' con quella che si entra. */
     public record DatiMiei(@NotBlank String nomeCompleto, String telefono, String citta) {}
@@ -81,6 +89,10 @@ public class AutenticazioneController {
         Utente utente = utenti.findByEmail(richiesta.email())
                 .filter(u -> passwordEncoder.matches(richiesta.password(), u.getHashPassword()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenziali non valide"));
+        // meglio dirlo qui che lasciarlo entrare e bloccarlo alla prima pagina
+        if (utente.isSospeso()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, UtenteCorrente.messaggioSospensione(utente));
+        }
         return new RispostaToken(creaToken(utente));
     }
 
@@ -109,9 +121,13 @@ public class AutenticazioneController {
         return valore == null || valore.isBlank() ? null : valore.trim();
     }
 
-    private static Io descrivi(Utente utente) {
+    private Io descrivi(Utente utente) {
         return new Io(
-                utente.getEmail(), utente.getNomeCompleto(), utente.getTelefono(), utente.getCitta());
+                utente.getEmail(),
+                utente.getNomeCompleto(),
+                utente.getTelefono(),
+                utente.getCitta(),
+                amministratori.sono(utente.getEmail()));
     }
 
     private String creaToken(Utente utente) {

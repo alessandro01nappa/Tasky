@@ -15,7 +15,18 @@ public class UtenteCorrente {
     }
 
     public Utente da(Jwt token) {
-        return utenti.findByEmail(token.getSubject())
+        Utente utente = utenti.findByEmail(token.getSubject())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utente non trovato"));
+        // il token dura due ore: senza questo controllo un sospeso resterebbe operativo fino a scadenza
+        if (utente.isSospeso()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messaggioSospensione(utente));
+        }
+        return utente;
+    }
+
+    static String messaggioSospensione(Utente utente) {
+        return utente.getMotivoSospensione() == null || utente.getMotivoSospensione().isBlank()
+                ? "Il tuo account è sospeso."
+                : "Il tuo account è sospeso: " + utente.getMotivoSospensione();
     }
 }

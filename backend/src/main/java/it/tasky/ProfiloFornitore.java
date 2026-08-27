@@ -54,6 +54,10 @@ public class ProfiloFornitore {
 
     private LocalDateTime dataApprovazione;
 
+    /** Perché è stato rifiutato: il Tasker deve sapere cosa sistemare. */
+    @Column(length = 300)
+    private String motivoRifiuto;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "categorie_fornitore",
@@ -151,6 +155,14 @@ public class ProfiloFornitore {
 
     public Set<AttivitaServizio> getAttivita() {
         return attivita;
+    }
+
+    public String getMotivoRifiuto() {
+        return motivoRifiuto;
+    }
+
+    public void setMotivoRifiuto(String motivoRifiuto) {
+        this.motivoRifiuto = motivoRifiuto;
     }
 
     public Set<CategoriaServizio> getCategorie() {

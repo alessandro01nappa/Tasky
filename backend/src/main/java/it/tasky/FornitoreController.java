@@ -74,6 +74,8 @@ public class FornitoreController {
             TipoLavoratore tipo,
             List<VoceTariffa> tariffe,
             boolean terminiAccettati,
+            /** Perché un amministratore l'ha respinto, se è successo. */
+            String motivoRifiuto,
             List<String> categorie,
             List<String> attivita,
             LocalDateTime dataCreazione,
@@ -90,6 +92,7 @@ public class FornitoreController {
                     profilo.getTipo(),
                     tariffe,
                     profilo.isTerminiAccettati(),
+                    profilo.getMotivoRifiuto(),
                     profilo.getCategorie().stream()
                             .map(CategoriaServizio::getNome)
                             .toList(),
@@ -199,6 +202,7 @@ public class FornitoreController {
             @RequestParam(required = false) Double lon,
             @RequestParam(required = false) Double entroKm) {
         return profili.findByStato(StatoFornitore.APPROVATO).stream()
+                .filter(profilo -> !profilo.getUtente().isSospeso())
                 .map(profilo -> {
                     List<Recensione> ricevute =
                             recensioni.findByIncaricoProfiloFornitoreId(profilo.getId());
@@ -349,18 +353,26 @@ public class FornitoreController {
      * La verifica si completa da sola: il profilo è approvato quando ha tutto il necessario
      * per candidarsi. Se qualcosa viene tolto, torna in attesa.
      */
+    /**
+     * Il profilo completo non si approva da solo: va in attesa e lo guarda una
+     * persona. "Verificato" deve voler dire che qualcuno ha controllato, altrimenti
+     * e' un'etichetta che promette una cosa che non facciamo.
+     */
     private void aggiornaApprovazione(ProfiloFornitore profilo) {
-        boolean completo = profilo.isTerminiAccettati()
-                && !profilo.getCategorie().isEmpty()
-                && tariffeComplete(profilo);
-
-        if (completo && profilo.getStato() != StatoFornitore.APPROVATO) {
-            profilo.setStato(StatoFornitore.APPROVATO);
-            profilo.setDataApprovazione(LocalDateTime.now());
-        } else if (!completo && profilo.getStato() == StatoFornitore.APPROVATO) {
+        if (!completo(profilo) && profilo.getStato() == StatoFornitore.APPROVATO) {
+            // un profilo gia' approvato che viene svuotato torna in coda
             profilo.setStato(StatoFornitore.IN_ATTESA);
             profilo.setDataApprovazione(null);
         }
+    }
+
+    /** Quello che serve prima di poter essere guardato da un amministratore. */
+    static boolean completo(ProfiloFornitore profilo) {
+        return profilo.isTerminiAccettati()
+                && !profilo.getCategorie().isEmpty()
+                && !profilo.getAttivita().isEmpty()
+                && profilo.getUtente().getTelefono() != null
+                && !profilo.getUtente().getTelefono().isBlank();
     }
 
     private List<AttivitaServizio> attivitaRichieste(List<Long> ids) {
