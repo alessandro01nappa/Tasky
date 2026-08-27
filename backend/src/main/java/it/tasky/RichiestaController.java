@@ -32,6 +32,7 @@ public class RichiestaController {
     private final AttivitaServizioRepository attivita;
     private final UtenteCorrente utenteCorrente;
     private final Geocodifica geocodifica;
+    private final FotoRepository foto;
 
     /** Sotto questi casi una media non dice niente e non va mostrata. */
     private static final int CASI_MINIMI = 3;
@@ -43,7 +44,8 @@ public class RichiestaController {
             ProfiloFornitoreRepository profili,
             AttivitaServizioRepository attivita,
             UtenteCorrente utenteCorrente,
-            Geocodifica geocodifica) {
+            Geocodifica geocodifica,
+            FotoRepository foto) {
         this.richieste = richieste;
         this.categorie = categorie;
         this.incarichi = incarichi;
@@ -51,6 +53,7 @@ public class RichiestaController {
         this.attivita = attivita;
         this.utenteCorrente = utenteCorrente;
         this.geocodifica = geocodifica;
+        this.foto = foto;
     }
 
     public record RichiestaNuova(
@@ -84,11 +87,16 @@ public class RichiestaController {
             String attivita,
             String cliente,
             String fornitoreRichiesto,
+            List<FotoController.VoceFoto> foto,
             LocalDateTime dataCreazione) {
 
         /** Per chi la richiesta riguarda: via, civico e punto esatto. */
         static RispostaRichiesta da(RichiestaServizio richiesta) {
-            return costruisci(richiesta, true, null);
+            return costruisci(richiesta, true, null, List.of());
+        }
+
+        static RispostaRichiesta da(RichiestaServizio richiesta, List<FotoController.VoceFoto> foto) {
+            return costruisci(richiesta, true, null, foto);
         }
 
         /**
@@ -97,11 +105,19 @@ public class RichiestaController {
          * mappa e' arrotondato a circa un chilometro.
          */
         static RispostaRichiesta pubblica(RichiestaServizio richiesta, ProfiloFornitore chiGuarda) {
-            return costruisci(richiesta, false, chiGuarda);
+            return costruisci(richiesta, false, chiGuarda, List.of());
+        }
+
+        static RispostaRichiesta pubblica(
+                RichiestaServizio richiesta, ProfiloFornitore chiGuarda, List<FotoController.VoceFoto> foto) {
+            return costruisci(richiesta, false, chiGuarda, foto);
         }
 
         private static RispostaRichiesta costruisci(
-                RichiestaServizio richiesta, boolean perIntero, ProfiloFornitore chiGuarda) {
+                RichiestaServizio richiesta,
+                boolean perIntero,
+                ProfiloFornitore chiGuarda,
+                List<FotoController.VoceFoto> foto) {
             return new RispostaRichiesta(
                     richiesta.getId(),
                     richiesta.getTitolo(),
@@ -121,6 +137,7 @@ public class RichiestaController {
                     richiesta.getFornitoreRichiesto() == null
                             ? null
                             : richiesta.getFornitoreRichiesto().getUtente().getNomeCompleto(),
+                    foto,
                     richiesta.getDataCreazione());
         }
 
@@ -353,10 +370,11 @@ public class RichiestaController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata");
         }
         // finche' e' aperta la puo' aprire chiunque per candidarsi: l'indirizzo resta coperto
+        List<FotoController.VoceFoto> immagini = FotoController.di(foto, richiesta.getId());
         return suo
-                ? RispostaRichiesta.da(richiesta)
+                ? RispostaRichiesta.da(richiesta, immagini)
                 : RispostaRichiesta.pubblica(
-                        richiesta, profili.findByUtenteId(chiChiede.getId()).orElse(null));
+                        richiesta, profili.findByUtenteId(chiChiede.getId()).orElse(null), immagini);
     }
 
     private boolean riguarda(RichiestaServizio richiesta, Long utenteId) {
