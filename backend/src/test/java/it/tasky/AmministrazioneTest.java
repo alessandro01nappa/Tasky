@@ -228,7 +228,7 @@ class AmministrazioneTest {
     }
 
     private java.util.List<String> nomiNellElenco(String token) {
-        return get("/api/fornitore/elenco", token).json().valueStream()
+        return get("/api/fornitore/elenco?quante=100", token).json().get("voci").valueStream()
                 .map(voce -> voce.get("nome").asString())
                 .toList();
     }

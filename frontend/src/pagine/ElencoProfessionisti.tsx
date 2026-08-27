@@ -28,7 +28,7 @@ export default function ElencoProfessionisti() {
   useEffect(() => {
     if (dove === undefined) return;
     elencoLavoratori(dove ? { ...dove, entroKm: entroKm ?? undefined } : undefined)
-      .then(setLavoratori)
+      .then((pagina) => setLavoratori(pagina.voci))
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
   }, [dove, entroKm]);

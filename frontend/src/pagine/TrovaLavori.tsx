@@ -30,8 +30,8 @@ export default function TrovaLavori() {
 
   // il raggio lo applica il backend: e' l'unico che conosce il punto esatto dei lavori
   useEffect(() => {
-    richiesteAperte(entroKm ?? undefined)
-      .then(setRichieste)
+    richiesteAperte({ entroKm: entroKm ?? undefined })
+      .then((pagina) => setRichieste(pagina.voci))
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"))
       .finally(() => setCaricato(true));
   }, [entroKm]);

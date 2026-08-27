@@ -203,44 +203,60 @@ public class FornitoreController {
      * Senza un punto di riferimento torna tutti; con latitudine e longitudine
      * ognuno porta con se' la distanza, e con entroKm restano solo i vicini.
      */
+    /** Un Tasker solo. Prima si cercava dentro l'elenco intero, che con le pagine non regge. */
+    @GetMapping("/{id}")
+    public VoceElenco singolo(@PathVariable Long id) {
+        ProfiloFornitore profilo = profili
+                .findById(id)
+                .filter(p -> p.getStato() == StatoFornitore.APPROVATO)
+                .filter(p -> !p.getUtente().isSospeso())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tasker non trovato"));
+        return descriviPerElenco(profilo, null, null);
+    }
+
     @GetMapping("/elenco")
-    public List<VoceElenco> elenco(
+    public PaginaDi<VoceElenco> elenco(
             @RequestParam(required = false) Double lat,
             @RequestParam(required = false) Double lon,
-            @RequestParam(required = false) Double entroKm) {
-        return profili.findByStato(StatoFornitore.APPROVATO).stream()
+            @RequestParam(required = false) Double entroKm,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int quante) {
+        List<VoceElenco> trovati = profili.findByStato(StatoFornitore.APPROVATO).stream()
                 .filter(profilo -> !profilo.getUtente().isSospeso())
-                .map(profilo -> {
-                    List<Recensione> ricevute =
-                            recensioni.findByIncaricoProfiloFornitoreId(profilo.getId());
-                    double media = ricevute.stream().mapToInt(Recensione::getVoto).average().orElse(0);
-                    return new VoceElenco(
-                            profilo.getId(),
-                            profilo.getUtente().getNomeCompleto(),
-                            profilo.getDescrizione(),
-                            profilo.getZonaOperativa(),
-                            profilo.getTipo(),
-                            tariffe.findByProfiloFornitoreId(profilo.getId()).stream()
-                                    .map(TariffaFornitore::getTariffaOraria)
-                                    .min(BigDecimal::compareTo)
-                                    .orElse(null),
-                            profilo.getCategorie().stream()
-                                    .map(CategoriaServizio::getNome)
-                                    .toList(),
-                            profilo.getAttivita().stream()
-                                    .map(AttivitaServizio::getNome)
-                                    .sorted()
-                                    .toList(),
-                            Math.round(media * 10) / 10.0,
-                            ricevute.size(),
-                            DisponibilitaController.di(fasce, assenze, profilo.getId()).fasce(),
-                            distanzaDa(profilo, lat, lon));
-                })
+                .map(profilo -> descriviPerElenco(profilo, lat, lon))
                 .filter(voce -> entroKm == null
                         || (voce.distanzaKm() != null && voce.distanzaKm() <= entroKm))
                 .sorted(Comparator.comparing(
                         VoceElenco::distanzaKm, Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
+        return PaginaDi.taglia(trovati, pagina, quante);
+    }
+
+    private VoceElenco descriviPerElenco(ProfiloFornitore profilo, Double lat, Double lon) {
+        List<Recensione> ricevute =
+                recensioni.findByIncaricoProfiloFornitoreId(profilo.getId());
+        double media = ricevute.stream().mapToInt(Recensione::getVoto).average().orElse(0);
+        return new VoceElenco(
+                profilo.getId(),
+                profilo.getUtente().getNomeCompleto(),
+                profilo.getDescrizione(),
+                profilo.getZonaOperativa(),
+                profilo.getTipo(),
+                tariffe.findByProfiloFornitoreId(profilo.getId()).stream()
+                        .map(TariffaFornitore::getTariffaOraria)
+                        .min(BigDecimal::compareTo)
+                        .orElse(null),
+                profilo.getCategorie().stream()
+                        .map(CategoriaServizio::getNome)
+                        .toList(),
+                profilo.getAttivita().stream()
+                        .map(AttivitaServizio::getNome)
+                        .sorted()
+                        .toList(),
+                Math.round(media * 10) / 10.0,
+                ricevute.size(),
+                DisponibilitaController.di(fasce, assenze, profilo.getId()).fasce(),
+                distanzaDa(profilo, lat, lon));
     }
 
     private static Double distanzaDa(ProfiloFornitore profilo, Double lat, Double lon) {

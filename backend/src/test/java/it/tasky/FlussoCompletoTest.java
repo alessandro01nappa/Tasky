@@ -585,7 +585,7 @@ class FlussoCompletoTest {
     }
 
     private List<Long> idNellaLista(String token) {
-        return get("/api/richieste", token).json().valueStream()
+        return get("/api/richieste?quante=100", token).json().get("voci").valueStream()
                 .map(richiesta -> richiesta.get("id").asLong())
                 .toList();
     }

@@ -251,17 +251,29 @@ public class RichiestaController {
                 prezzi.size(), base, media, prezzi.get(0), prezzi.get(prezzi.size() - 1));
     }
 
+    /**
+     * Il filtro per distanza si applica dopo aver calcolato le distanze, quindi
+     * non lo puo' fare il database: si prende una pagina piu' larga e si taglia
+     * qui. Con numeri veri il passo successivo e' mettere le coordinate in una
+     * query geografica, ma non prima che servano.
+     */
     @GetMapping
-    public List<RispostaRichiesta> aperte(
-            @RequestParam(required = false) Double entroKm, @AuthenticationPrincipal Jwt token) {
+    public PaginaDi<RispostaRichiesta> aperte(
+            @RequestParam(required = false) Double entroKm,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int quante,
+            @AuthenticationPrincipal Jwt token) {
+
         ProfiloFornitore chiGuarda = profili
                 .findByUtenteId(utenteCorrente.da(token).getId())
                 .orElse(null);
-        return richieste.findByStatoAndFornitoreRichiestoIsNull(StatoRichiesta.APERTA).stream()
+        List<RispostaRichiesta> tutte = richieste
+                .findByStatoAndFornitoreRichiestoIsNull(StatoRichiesta.APERTA).stream()
                 .map(richiesta -> RispostaRichiesta.pubblica(richiesta, chiGuarda))
                 .filter(risposta -> entroKm == null
                         || (risposta.distanzaKm() != null && risposta.distanzaKm() <= entroKm))
                 .toList();
+        return PaginaDi.taglia(tutte, pagina, quante);
     }
 
     /** Le prenotazioni dirette ancora da accettare, viste dal lavoratore. */

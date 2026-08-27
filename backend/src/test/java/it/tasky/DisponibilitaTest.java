@@ -63,7 +63,7 @@ class DisponibilitaTest {
 
         // e chi cerca le legge nell'elenco
         String cliente = registra("cliente");
-        JsonNode voce = trova(get("/api/fornitore/elenco", cliente).json(), "Utente orari");
+        JsonNode voce = trova(get("/api/fornitore/elenco?quante=100", cliente).json().get("voci"), "Utente orari");
         assertThat(voce.get("disponibilita")).hasSize(3);
     }
 

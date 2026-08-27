@@ -16,6 +16,8 @@ export type Attivita = {
   categoriaId: number;
 };
 
+export type FotoRichiesta = { id: number; tipo: string; dimensione: number };
+
 export type Richiesta = {
   id: number;
   titolo: string;
@@ -27,6 +29,7 @@ export type Richiesta = {
   longitudine: number | null;
   /** Quanto dista dalla zona del lavoratore, se il backend sa dove sono entrambi. */
   distanzaKm: number | null;
+  foto: FotoRichiesta[];
   budget: number | null;
   /** Estremi di quando si può fare: uguali = giorno preciso, entrambi nulli = nessun vincolo. */
   dataPreferita: string | null;
@@ -105,8 +108,19 @@ export type Lavoratore = {
   attivita: string[];
   media: number;
   numeroRecensioni: number;
+  /** Quando lavora di solito: si legge, non filtra ancora niente. */
+  disponibilita: { giorno: string; dalle: string; alle: string }[];
   /** Quanto dista dal punto indicato dal cliente, se ne ha indicato uno. */
   distanzaKm: number | null;
+};
+
+/** Una fetta di elenco: il backend non restituisce più tutto in una volta. */
+export type PaginaDi<T> = {
+  voci: T[];
+  pagina: number;
+  perPagina: number;
+  quante: number;
+  altre: boolean;
 };
 
 export type Recensione = {
@@ -200,8 +214,11 @@ export function attivitaDiCategoria(categoriaId: number) {
   return chiama<Attivita[]>(`/api/categorie/${categoriaId}/attivita`);
 }
 
-export function richiesteAperte(entroKm?: number) {
-  return chiama<Richiesta[]>(entroKm ? `/api/richieste?entroKm=${entroKm}` : "/api/richieste");
+export function richiesteAperte(opzioni: { entroKm?: number; pagina?: number } = {}) {
+  const parametri = new URLSearchParams();
+  if (opzioni.entroKm) parametri.set("entroKm", String(opzioni.entroKm));
+  if (opzioni.pagina) parametri.set("pagina", String(opzioni.pagina));
+  return chiama<PaginaDi<Richiesta>>(`/api/richieste?${parametri}`);
 }
 
 export type Luogo = {
@@ -312,20 +329,23 @@ export function mieCandidature() {
   return chiama<MiaCandidatura[]>("/api/fornitore/candidature");
 }
 
-export function elencoLavoratori(vicinoA?: {
-  latitudine: number;
-  longitudine: number;
-  entroKm?: number;
-}) {
-  if (!vicinoA) {
-    return chiama<Lavoratore[]>("/api/fornitore/elenco");
+export function elencoLavoratori(
+  vicinoA?: { latitudine: number; longitudine: number; entroKm?: number },
+  pagina = 0,
+) {
+  const parametri = new URLSearchParams();
+  if (vicinoA) {
+    parametri.set("lat", String(vicinoA.latitudine));
+    parametri.set("lon", String(vicinoA.longitudine));
+    if (vicinoA.entroKm) parametri.set("entroKm", String(vicinoA.entroKm));
   }
-  const parametri = new URLSearchParams({
-    lat: String(vicinoA.latitudine),
-    lon: String(vicinoA.longitudine),
-  });
-  if (vicinoA.entroKm) parametri.set("entroKm", String(vicinoA.entroKm));
-  return chiama<Lavoratore[]>(`/api/fornitore/elenco?${parametri}`);
+  if (pagina) parametri.set("pagina", String(pagina));
+  return chiama<PaginaDi<Lavoratore>>(`/api/fornitore/elenco?${parametri}`);
+}
+
+/** Un Tasker solo: prima si cercava dentro l'elenco, che con le pagine non regge. */
+export function lavoratore(id: number) {
+  return chiama<Lavoratore>(`/api/fornitore/${id}`);
 }
 
 export type RecensioniLavoratore = {

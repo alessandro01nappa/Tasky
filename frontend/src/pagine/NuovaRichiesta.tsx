@@ -70,7 +70,7 @@ export default function NuovaRichiesta() {
   useEffect(() => {
     if (!fornitoreId) return;
     elencoLavoratori()
-      .then((tutti) => setPrenotato(tutti.find((l) => l.id === Number(fornitoreId)) ?? null))
+      .then((pagina) => setPrenotato(pagina.voci.find((l) => l.id === Number(fornitoreId)) ?? null))
       .catch(() => setPrenotato(null));
   }, [fornitoreId]);
 

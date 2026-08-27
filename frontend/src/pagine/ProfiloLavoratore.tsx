@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import {
-  elencoLavoratori,
+  lavoratore as leggiLavoratore,
   recensioniLavoratore,
   type Lavoratore,
   type RecensioniLavoratore,
@@ -18,13 +18,8 @@ export default function ProfiloLavoratore() {
   const [errore, setErrore] = useState("");
 
   useEffect(() => {
-    // non esiste un endpoint per il singolo lavoratore: lo cerco nell'elenco
-    elencoLavoratori()
-      .then((tutti) => {
-        const trovato = tutti.find((l) => l.id === idLavoratore);
-        if (!trovato) throw new Error("Lavoratore non trovato");
-        setLavoratore(trovato);
-      })
+    leggiLavoratore(idLavoratore)
+      .then(setLavoratore)
       .catch((e) => setErrore(e instanceof Error ? e.message : "Errore inatteso"));
     recensioniLavoratore(idLavoratore)
       .then(setRecensioni)
