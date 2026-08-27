@@ -86,6 +86,8 @@ export type Fornitore = {
   tipo: TipoLavoratore;
   tariffe: { categoriaId: number; categoria: string; tariffaOraria: number }[];
   terminiAccettati: boolean;
+  /** Perché un amministratore l'ha respinto, se è successo. */
+  motivoRifiuto: string | null;
   categorie: string[];
   attivita: string[];
   dataCreazione: string;
@@ -179,6 +181,7 @@ export type Io = {
   nomeCompleto: string;
   telefono: string | null;
   citta: string | null;
+  amministratore: boolean;
 };
 
 export function io() {
@@ -370,6 +373,78 @@ export function aggiornaProfiloFornitore(dati: {
   terminiAccettati: boolean;
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);
+}
+
+// --- Amministrazione: la vede solo chi è configurato come tale ---
+
+export type StatoFornitore = "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
+
+export type TaskerDaVerificare = {
+  id: number;
+  nome: string;
+  email: string;
+  telefono: string | null;
+  zonaOperativa: string;
+  descrizione: string;
+  tipo: TipoLavoratore;
+  attivita: string[];
+  quanteTariffe: number;
+  completo: boolean;
+  stato: StatoFornitore;
+  motivoRifiuto: string | null;
+  dataCreazione: string;
+};
+
+export type UtenteAmministrato = {
+  id: number;
+  nome: string;
+  email: string;
+  citta: string | null;
+  sospeso: boolean;
+  motivoSospensione: string | null;
+  amministratore: boolean;
+  dataCreazione: string;
+};
+
+export type RichiestaAmministrata = {
+  id: number;
+  titolo: string;
+  cliente: string;
+  citta: string;
+  stato: Richiesta["stato"];
+  dataCreazione: string;
+};
+
+export function taskerDaVerificare(stato: StatoFornitore = "IN_ATTESA") {
+  return chiama<TaskerDaVerificare[]>(`/api/amministrazione/fornitori?stato=${stato}`);
+}
+
+export function approvaTasker(id: number) {
+  return invia<TaskerDaVerificare>(`/api/amministrazione/fornitori/${id}/approva`, "POST", {});
+}
+
+export function rifiutaTasker(id: number, motivo: string) {
+  return invia<TaskerDaVerificare>(`/api/amministrazione/fornitori/${id}/rifiuta`, "POST", { motivo });
+}
+
+export function utentiAmministrati() {
+  return chiama<UtenteAmministrato[]>("/api/amministrazione/utenti");
+}
+
+export function sospendiUtente(id: number, motivo: string) {
+  return invia<UtenteAmministrato>(`/api/amministrazione/utenti/${id}/sospendi`, "POST", { motivo });
+}
+
+export function riattivaUtente(id: number) {
+  return invia<UtenteAmministrato>(`/api/amministrazione/utenti/${id}/riattiva`, "POST", {});
+}
+
+export function richiesteAmministrate() {
+  return chiama<RichiestaAmministrata[]>("/api/amministrazione/richieste");
+}
+
+export function ritiraRichiestaDaAmministratore(id: number) {
+  return invia<RichiestaAmministrata>(`/api/amministrazione/richieste/${id}/ritira`, "POST", {});
 }
 
 export function mieiIncarichi() {

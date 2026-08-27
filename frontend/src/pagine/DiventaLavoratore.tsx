@@ -307,15 +307,23 @@ export default function DiventaLavoratore() {
         {errore && <p className="text-sm text-red-600">{errore}</p>}
       </form>
 
+      {profilo?.stato === "RIFIUTATO" && profilo.motivoRifiuto && (
+        <div className="mt-5">
+          <RiquadroInfo>
+            Il profilo è stato respinto: {profilo.motivoRifiuto}. Sistema e risalva, tornerà in
+            attesa di verifica.
+          </RiquadroInfo>
+        </div>
+      )}
+
       <div className="mt-5">
         {mancanti.length === 0 ? (
           <RiquadroInfo>
-            Il profilo è completo: appena salvi potrai candidarti alle richieste.
+            Il profilo è completo. Appena salvi va in verifica: qualcuno lo guarda e ti fa sapere.
           </RiquadroInfo>
         ) : (
           <RiquadroInfo>
-            Per candidarti serve ancora: {mancanti.join(", ")}. Finché manca qualcosa il profilo
-            resta in attesa.
+            Per andare in verifica serve ancora: {mancanti.join(", ")}.
           </RiquadroInfo>
         )}
       </div>

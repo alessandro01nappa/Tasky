@@ -1,4 +1,4 @@
-import { Briefcase, ClipboardList, User } from "lucide-react";
+import { Briefcase, ClipboardList, ShieldCheck, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BarraNavigazione from "../componenti/BarraNavigazione";
@@ -113,10 +113,36 @@ export default function Profilo() {
       {profilo?.stato === "IN_ATTESA" && (
         <div className="mt-3">
           <RiquadroInfo>
-            Per lavorare completa il profilo: servono i lavori che svolgi, una tariffa per ogni
-            categoria e l'accettazione dei termini.
+            Il profilo è in verifica: qualcuno lo guarda e ti fa sapere. Fino ad allora non puoi
+            candidarti.
           </RiquadroInfo>
         </div>
+      )}
+
+      {profilo?.stato === "RIFIUTATO" && (
+        <div className="mt-3">
+          <RiquadroInfo>
+            {profilo.motivoRifiuto
+              ? `Il profilo è stato respinto: ${profilo.motivoRifiuto}`
+              : "Il profilo è stato respinto."}{" "}
+            Puoi sistemarlo e rimandarlo in verifica.
+          </RiquadroInfo>
+        </div>
+      )}
+
+      {utente?.amministratore && (
+        <Link
+          to="/amministrazione"
+          className="mt-5 flex items-center gap-3.5 rounded-3xl border border-corallo bg-white p-4"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-pesca text-corallo">
+            <ShieldCheck className="size-5" strokeWidth={1.75} />
+          </span>
+          <span>
+            <span className="block font-semibold">Amministrazione</span>
+            <span className="block text-sm text-fumo">Verifiche, account e annunci</span>
+          </span>
+        </Link>
       )}
 
       <h2 className="mt-8 text-lg font-semibold">Le tue cose</h2>
