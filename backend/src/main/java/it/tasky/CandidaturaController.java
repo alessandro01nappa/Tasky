@@ -25,16 +25,19 @@ public class CandidaturaController {
     private final RichiestaServizioRepository richieste;
     private final ProfiloFornitoreRepository profili;
     private final UtenteCorrente utenteCorrente;
+    private final Notifiche notifiche;
 
     public CandidaturaController(
             CandidaturaRepository candidature,
             RichiestaServizioRepository richieste,
             ProfiloFornitoreRepository profili,
-            UtenteCorrente utenteCorrente) {
+            UtenteCorrente utenteCorrente,
+            Notifiche notifiche) {
         this.candidature = candidature;
         this.richieste = richieste;
         this.profili = profili;
         this.utenteCorrente = utenteCorrente;
+        this.notifiche = notifiche;
     }
 
     public record CandidaturaNuova(String messaggio, BigDecimal prezzoOfferto) {}
@@ -94,7 +97,9 @@ public class CandidaturaController {
         candidatura.setProfiloFornitore(profilo);
         candidatura.setMessaggio(nuova.messaggio());
         candidatura.setPrezzoOfferto(nuova.prezzoOfferto());
-        return RispostaCandidatura.da(candidature.save(candidatura));
+        Candidatura salvata = candidature.save(candidatura);
+        notifiche.candidaturaRicevuta(salvata);
+        return RispostaCandidatura.da(salvata);
     }
 
     /** Ci si puo' ripensare, finche' il cliente non ha ancora scelto. */
