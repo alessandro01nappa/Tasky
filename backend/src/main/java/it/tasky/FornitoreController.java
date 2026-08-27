@@ -32,6 +32,8 @@ public class FornitoreController {
     private final RecensioneRepository recensioni;
     private final UtenteCorrente utenteCorrente;
     private final Geocodifica geocodifica;
+    private final DisponibilitaRepository fasce;
+    private final AssenzaRepository assenze;
 
     public FornitoreController(
             ProfiloFornitoreRepository profili,
@@ -41,7 +43,9 @@ public class FornitoreController {
             CandidaturaRepository candidature,
             RecensioneRepository recensioni,
             UtenteCorrente utenteCorrente,
-            Geocodifica geocodifica) {
+            Geocodifica geocodifica,
+            DisponibilitaRepository fasce,
+            AssenzaRepository assenze) {
         this.profili = profili;
         this.categorie = categorie;
         this.attivita = attivita;
@@ -50,6 +54,8 @@ public class FornitoreController {
         this.recensioni = recensioni;
         this.utenteCorrente = utenteCorrente;
         this.geocodifica = geocodifica;
+        this.fasce = fasce;
+        this.assenze = assenze;
     }
 
     public record DatiFornitore(
@@ -142,6 +148,7 @@ public class FornitoreController {
             List<String> attivita,
             double media,
             int numeroRecensioni,
+            List<DisponibilitaController.VoceFascia> disponibilita,
             /** Quanto dista dal punto che sta guardando il cliente, se ne ha indicato uno. */
             Double distanzaKm) {}
 
@@ -226,6 +233,7 @@ public class FornitoreController {
                                     .toList(),
                             Math.round(media * 10) / 10.0,
                             ricevute.size(),
+                            DisponibilitaController.di(fasce, assenze, profilo.getId()).fasce(),
                             distanzaDa(profilo, lat, lon));
                 })
                 .filter(voce -> entroKm == null
