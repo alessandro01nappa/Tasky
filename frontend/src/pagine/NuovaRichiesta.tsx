@@ -144,7 +144,7 @@ export default function NuovaRichiesta() {
   }
 
   return (
-    <Pagina>
+    <Pagina larga>
       <Link to="/" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
         <ArrowLeft className="size-4" strokeWidth={2.25} />
         Torna alla home

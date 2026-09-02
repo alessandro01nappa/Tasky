@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  * e' il momento in cui serve passare a un bucket.
  */
 @Component
+@ConditionalOnProperty(name = "tasky.foto.provider", havingValue = "disco", matchIfMissing = true)
 public class ArchivioSuDisco implements ArchivioFoto {
 
     private static final Logger log = LoggerFactory.getLogger(ArchivioSuDisco.class);

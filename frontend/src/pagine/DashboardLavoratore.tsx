@@ -79,7 +79,7 @@ export default function DashboardLavoratore() {
   }
 
   return (
-    <Pagina>
+    <Pagina larga>
       <h1 className="text-3xl font-bold">Dashboard</h1>
       <p className="mt-1 text-sm font-medium text-fumo">
         {profilo ? profilo.zonaOperativa : "Il tuo lavoro"}
@@ -115,7 +115,7 @@ export default function DashboardLavoratore() {
                 Richieste in arrivo
                 <span className="ml-2 text-sm font-medium text-fumo">{dirette.length}</span>
               </h2>
-              <div className="mt-3 flex flex-col gap-3">
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
                 {dirette.map((r) => (
                   <div key={r.id} className="rounded-3xl border border-bordo bg-white p-5">
                     <p className="text-base font-semibold">{r.titolo}</p>
@@ -147,7 +147,7 @@ export default function DashboardLavoratore() {
           )}
 
           <h2 className="mt-8 text-lg font-semibold">Lavori da fare</h2>
-          <div className="mt-3 flex flex-col gap-3">
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {inCorso.map((i) => (
               <Link
                 key={i.id}
@@ -176,7 +176,7 @@ export default function DashboardLavoratore() {
             Le mie candidature
             <span className="ml-2 text-sm font-medium text-fumo">{candidature.length}</span>
           </h2>
-          <div className="mt-3 flex flex-col gap-3">
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {candidature.map((c) => (
               <div key={c.id} className="flex flex-col items-start">
                 <Link
@@ -215,7 +215,7 @@ export default function DashboardLavoratore() {
               <span className="ml-2 text-sm font-medium text-fumo">{recensioni.numero}</span>
             )}
           </h2>
-          <div className="mt-3 flex flex-col gap-3">
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {recensioni?.recensioni.map((r, indice) => (
               <div key={indice} className="rounded-3xl border border-bordo bg-white p-5">
                 <div className="flex items-center gap-1.5">

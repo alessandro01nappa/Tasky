@@ -2,6 +2,7 @@ import { ArrowLeft, PartyPopper, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Pagina from "../componenti/Pagina";
+import ChatIncarico from "../componenti/ChatIncarico";
 import StatoSuccesso from "../componenti/StatoSuccesso";
 import {
   annullaIncarico,
@@ -76,7 +77,7 @@ export default function DettaglioIncarico() {
 
   if (!dati) {
     return (
-      <div className="mx-auto min-h-screen max-w-md px-6 pt-7">
+      <div className="mx-auto min-h-screen max-w-md px-6 pt-7 md:max-w-6xl md:px-10 md:pt-20 lg:px-12">
         <Link
           to="/profilo"
           className="flex items-center gap-1.5 text-sm font-semibold text-corallo"
@@ -93,7 +94,7 @@ export default function DettaglioIncarico() {
   const sonoIlLavoratore = dati.ruolo === "FORNITORE";
 
   return (
-    <Pagina>
+    <Pagina larga>
       <Link to="/profilo" className="flex items-center gap-1.5 text-sm font-semibold text-corallo">
         <ArrowLeft className="size-4" strokeWidth={2.25} />
         Torna al profilo
@@ -104,6 +105,8 @@ export default function DettaglioIncarico() {
         {dati.stato.toLowerCase().replace("_", " ")} • sei il{" "}
         {sonoIlLavoratore ? "Tasker" : "cliente"}
       </p>
+
+      <ChatIncarico incaricoId={dati.id} />
 
       <div className="mt-5 rounded-3xl border border-bordo bg-white p-5">
         <p className="text-sm">

@@ -28,7 +28,7 @@ export default function ProfiloLavoratore() {
 
   if (!lavoratore) {
     return (
-      <div className="mx-auto min-h-screen max-w-md px-6 pt-7">
+      <div className="mx-auto min-h-screen max-w-md px-6 pt-7 md:max-w-6xl md:px-10 md:pt-20 lg:px-12">
         <Link
           to="/professionisti"
           className="flex items-center gap-1.5 text-sm font-semibold text-corallo"
@@ -52,7 +52,7 @@ export default function ProfiloLavoratore() {
   return (
     <div className="min-h-screen">
       <div className="bg-pesca pb-6">
-        <div className="mx-auto max-w-md px-6 pt-6">
+        <div className="mx-auto max-w-md px-6 pt-6 md:max-w-6xl md:px-10 lg:px-12">
           <Link
             to="/professionisti"
             className="flex h-12 w-24 items-center justify-center gap-1.5 rounded-2xl border border-bordo bg-white text-sm font-semibold"
@@ -61,7 +61,7 @@ export default function ProfiloLavoratore() {
             Indietro
           </Link>
 
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex items-center gap-4 md:mt-6">
             <span
               className={`flex size-22 shrink-0 items-center justify-center rounded-full text-xl font-bold ${
                 professionista ? "bg-verde-chiaro text-verde" : "bg-white text-corallo"
@@ -86,8 +86,10 @@ export default function ProfiloLavoratore() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-md px-6 pt-5 pb-12">
-        <div className="flex gap-2.5">
+      <div className="mx-auto max-w-md px-6 pt-5 pb-12 md:max-w-6xl md:px-10 md:pt-8 lg:px-12">
+        <div className="grid gap-5 md:grid-cols-[1fr_320px] md:items-start">
+          <div>
+            <div className="flex gap-2.5">
           <div className="flex flex-1 flex-col gap-1 rounded-2xl border border-bordo bg-white px-3 py-3.5">
             <p className="flex items-center gap-1.5 text-lg font-semibold">
               <Star className="size-4 text-ambra" strokeWidth={1.75} fill="currentColor" />
@@ -105,7 +107,31 @@ export default function ProfiloLavoratore() {
               <p className="text-xs text-fumo">Tariffa</p>
             </div>
           )}
-        </div>
+            </div>
+
+            <h2 className="mt-5 text-lg font-semibold">Chi è {lavoratore.nome.split(" ")[0]}</h2>
+            <p className="mt-3 text-sm text-fumo">{lavoratore.descrizione}</p>
+
+            <h2 className="mt-5 text-lg font-semibold">Servizi offerti</h2>
+            <div className="mt-3 grid gap-3 rounded-3xl border border-bordo bg-white p-4 md:grid-cols-2">
+              {lavoratore.attivita.map((voce) => (
+                <p key={voce} className="text-sm font-semibold">
+                  {voce}
+                </p>
+              ))}
+              {lavoratore.attivita.length === 0 &&
+                lavoratore.categorie.map((categoria) => (
+                  <p key={categoria} className="text-sm font-semibold">
+                    {categoria}
+                  </p>
+                ))}
+              {lavoratore.attivita.length === 0 && lavoratore.categorie.length === 0 && (
+                <p className="text-sm text-fumo">Nessun lavoro indicato.</p>
+              )}
+            </div>
+          </div>
+
+          <div>
 
         <Link
           to={`/richieste/nuova?fornitore=${lavoratore.id}`}
@@ -116,28 +142,7 @@ export default function ProfiloLavoratore() {
           Contatta {lavoratore.nome.split(" ")[0]}
         </Link>
 
-        <h2 className="mt-5 text-lg font-semibold">Chi è {lavoratore.nome.split(" ")[0]}</h2>
-        <p className="mt-3 text-sm text-fumo">{lavoratore.descrizione}</p>
-
-        <h2 className="mt-5 text-lg font-semibold">Servizi offerti</h2>
-        <div className="mt-3 flex flex-col gap-3.5 rounded-3xl border border-bordo bg-white p-4">
-          {lavoratore.attivita.map((voce) => (
-            <p key={voce} className="text-sm font-semibold">
-              {voce}
-            </p>
-          ))}
-          {lavoratore.attivita.length === 0 &&
-            lavoratore.categorie.map((categoria) => (
-              <p key={categoria} className="text-sm font-semibold">
-                {categoria}
-              </p>
-            ))}
-          {lavoratore.attivita.length === 0 && lavoratore.categorie.length === 0 && (
-            <p className="text-sm text-fumo">Nessun lavoro indicato.</p>
-          )}
-        </div>
-
-        <h2 className="mt-5 text-lg font-semibold">Recensioni recenti</h2>
+        <h2 className="text-lg font-semibold">Recensioni recenti</h2>
         <div className="mt-3 flex flex-col gap-2.5">
           {recensioni?.recensioni.map((r, indice) => (
             <div key={indice} className="rounded-2xl border border-bordo bg-white p-3.5">
@@ -153,8 +158,10 @@ export default function ProfiloLavoratore() {
               Ancora nessuna recensione. Le riceve dopo aver completato un lavoro.
             </RiquadroInfo>
           )}
+          </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

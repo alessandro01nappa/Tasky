@@ -58,7 +58,7 @@ export default function MieRichieste() {
   const inCorso = richieste.filter((r) => r.stato === "ASSEGNATA").length;
 
   return (
-    <Pagina>
+    <Pagina larga>
       <h1 className="text-3xl font-bold">Le mie richieste</h1>
       <p className="mt-3 text-sm text-fumo">
         Segui i tuoi annunci, le candidature ricevute e i lavori già completati.
@@ -102,7 +102,7 @@ export default function MieRichieste() {
         Crea un annuncio
       </Link>
 
-      <div className="mt-3.5 flex flex-col gap-3.5">
+      <div className="mt-3.5 grid gap-3.5 md:grid-cols-2">
         {visibili.map((r) => {
           const incarico = incarichi.find((i) => i.richiestaId === r.id);
           const pubblicata = new Date(r.dataCreazione).toLocaleDateString("it-IT", {

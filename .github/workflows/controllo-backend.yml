@@ -1,0 +1,17 @@
+name: Controllo backend
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Controlla il backend
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          test -n "$BACKEND_URL"
+          curl --fail --silent --show-error --max-time 30 "$BACKEND_URL/api/health"

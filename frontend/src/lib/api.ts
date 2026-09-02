@@ -1,5 +1,7 @@
 import { cancellaToken, leggiToken } from "./sessione";
 
+const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
 // Chi svolge i lavori si chiama "Tasker" nei testi mostrati all'utente,
 // "lavoratore" nel codice di questa app e "fornitore" nel backend e nel database.
 
@@ -130,10 +132,18 @@ export type Recensione = {
   dataCreazione: string;
 };
 
+export type Messaggio = {
+  id: number;
+  autore: string;
+  scrittoDaMe: boolean;
+  testo: string;
+  dataCreazione: string;
+};
+
 async function chiama<T>(percorso: string, opzioni: RequestInit = {}): Promise<T> {
   const token = leggiToken();
 
-  const risposta = await fetch(percorso, {
+  const risposta = await fetch(`${API_URL}${percorso}`, {
     ...opzioni,
     headers: {
       "Content-Type": "application/json",
@@ -489,4 +499,12 @@ export function leggiRecensione(incaricoId: number) {
 
 export function creaRecensione(incaricoId: number, dati: { voto: number; commento: string }) {
   return invia<Recensione>(`/api/incarichi/${incaricoId}/recensione`, "POST", dati);
+}
+
+export function messaggiIncarico(incaricoId: number) {
+  return chiama<Messaggio[]>(`/api/incarichi/${incaricoId}/chat`);
+}
+
+export function inviaMessaggio(incaricoId: number, testo: string) {
+  return invia<Messaggio>(`/api/incarichi/${incaricoId}/chat`, "POST", { testo });
 }

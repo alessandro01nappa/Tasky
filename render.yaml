@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: tasky-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: TASKY_JWT_SEGRETO
+        sync: false
+      - key: TASKY_AMMINISTRATORI
+        sync: false
+      - key: TASKY_FRONTEND_URL
+        sync: false
+      - key: TASKY_DB_URL
+        sync: false
+      - key: TASKY_DB_USERNAME
+        sync: false
+      - key: TASKY_DB_PASSWORD
+        sync: false
+      - key: TASKY_FOTO_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: TASKY_SMTP_HOST
+        sync: false
+      - key: TASKY_SMTP_PORTA
+        value: "587"
+      - key: TASKY_SMTP_UTENTE
+        sync: false
+      - key: TASKY_SMTP_PASSWORD
+        sync: false
+      - key: TASKY_EMAIL_MITTENTE
+        sync: false
+      - key: TASKY_INDIRIZZO_PUBBLICO
+        sync: false
+  - type: web
+    name: tasky-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false

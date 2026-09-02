@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.DispatcherType;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
@@ -11,6 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,14 +31,18 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SicurezzaConfig {
 
     private final SecretKey chiave;
+    private final String frontendUrl;
 
     private static final Logger log = LoggerFactory.getLogger(SicurezzaConfig.class);
 
     /** Sotto i 32 byte la firma HMAC-SHA256 non regge: meglio rifiutarsi di partire. */
     private static final int BYTE_MINIMI = 32;
 
-    public SicurezzaConfig(@Value("${tasky.jwt.segreto:}") String segreto) {
+    public SicurezzaConfig(
+            @Value("${tasky.jwt.segreto:}") String segreto,
+            @Value("${tasky.frontend.url}") String frontendUrl) {
         this.chiave = new SecretKeySpec(chiaveDa(segreto), "HmacSHA256");
+        this.frontendUrl = frontendUrl;
     }
 
     /**
@@ -59,7 +68,8 @@ public class SicurezzaConfig {
 
     @Bean
     SecurityFilterChain sicurezza(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessioni -> sessioni.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(richieste -> richieste
                         // senza questa riga gli errori, che passano da /error, diventerebbero 401
@@ -67,10 +77,23 @@ public class SicurezzaConfig {
                         .permitAll()
                         .requestMatchers("/api/registrazione", "/api/login")
                         .permitAll()
+                        .requestMatchers("/api/health")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configurazione = new CorsConfiguration();
+        configurazione.setAllowedOrigins(List.of(frontendUrl));
+        configurazione.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configurazione.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
+        fonte.registerCorsConfiguration("/api/**", configurazione);
+        return fonte;
     }
 
     @Bean

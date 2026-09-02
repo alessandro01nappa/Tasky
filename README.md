@@ -37,6 +37,16 @@ cd backend && mvn spring-boot:run
 cd frontend && npm run dev
 ```
 
+## Deploy
+
+Il backend è pronto per Render tramite `render.yaml` e `backend/Dockerfile`. Il frontend può essere collegato a Vercel usando la cartella `frontend` come root.
+
+Per il database usa una connessione PostgreSQL Supabase nel parametro `TASKY_DB_URL`, preferibilmente tramite il Session Pooler con SSL. Per le foto imposta `TASKY_FOTO_PROVIDER=cloudinary` e configura `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`.
+
+Nel progetto Render imposta `VITE_API_URL` con l'indirizzo pubblico del backend. Le migrazioni Flyway vengono applicate all'avvio del backend e le categorie iniziali vengono create automaticamente.
+
+GitHub Actions esegue la verifica di backend e frontend a ogni modifica. Il workflow `Controllo backend` controlla ogni giorno l'endpoint `/api/health`: nel repository va aggiunta la variabile Actions `BACKEND_URL` con l'indirizzo pubblico Render.
+
 ## Schema del database
 
 Lo schema lo fanno le migrazioni in `backend/src/main/resources/db/migration`,

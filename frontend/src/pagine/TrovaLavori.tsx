@@ -45,7 +45,7 @@ export default function TrovaLavori() {
   const visibili = richieste
     .filter((r) => !filtro || r.categoria === filtro)
     .filter((r) => !soloMie || mieCategorie.length === 0 || mieCategorie.includes(r.categoria));
-  const sullaMappa = visibili.filter((r) => r.latitudine !== null);
+  const sullaMappa = visibili.filter((r) => r.latitudine !== null && r.longitudine !== null);
   const senzaIndirizzo = visibili.length - sullaMappa.length;
 
   return (
@@ -124,20 +124,18 @@ export default function TrovaLavori() {
         </div>
       )}
 
-      {sullaMappa.length > 0 && (
-        <div className="mt-4">
-          <Suspense fallback={<div className="h-72 rounded-3xl bg-sabbia md:h-96" />}>
-            <MappaLavori richieste={sullaMappa} centro={miaPosizione} />
-          </Suspense>
-          {senzaIndirizzo > 0 && (
-            <p className="mt-2 text-xs text-fumo">
-              {senzaIndirizzo === 1
-                ? "Un lavoro non ha un indirizzo, quindi sulla mappa non compare."
-                : `${senzaIndirizzo} lavori non hanno un indirizzo, quindi sulla mappa non compaiono.`}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="mt-4">
+        <Suspense fallback={<div className="h-72 rounded-3xl bg-sabbia md:h-96" />}>
+          <MappaLavori richieste={sullaMappa} centro={miaPosizione} />
+        </Suspense>
+        {senzaIndirizzo > 0 && (
+          <p className="mt-2 text-xs text-fumo">
+            {senzaIndirizzo === 1
+              ? "Un lavoro non ha un indirizzo, quindi sulla mappa non compare."
+              : `${senzaIndirizzo} lavori non hanno un indirizzo, quindi sulla mappa non compaiono.`}
+          </p>
+        )}
+      </div>
 
       <h2 className="mt-8 text-lg font-semibold">
         {filtro ?? "Tutte le richieste"}

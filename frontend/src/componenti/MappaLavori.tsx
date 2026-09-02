@@ -5,8 +5,8 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import type { Richiesta } from "../lib/api";
 
-/** Quanto si vede da qui: una città e i suoi dintorni, non mezza Italia. */
 const ZOOM_CITTA = 12;
+const CENTRO_PREDEFINITO: [number, number] = [41.9028, 12.4964];
 
 // Leaflet cerca le sue icone in una cartella che il bundler non conosce: gliele disegno io.
 function segnaposto(quanti: number) {
@@ -82,8 +82,7 @@ function Inquadra({ lat, lon, punti }: { lat?: number; lon?: number; punti: stri
 
 export default function MappaLavori({ richieste, centro }: Props) {
   const gruppi = raggruppa(richieste);
-  const partenza = centro ?? gruppi[0]?.punto;
-  if (!partenza) return null;
+  const partenza = centro ?? gruppi[0]?.punto ?? CENTRO_PREDEFINITO;
 
   // stringa e non array: un array nuovo a ogni render farebbe ripartire Inquadra all'infinito
   const punti = gruppi.map((g) => g.punto.join(",")).join(";");

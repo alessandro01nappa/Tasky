@@ -58,7 +58,7 @@ export default function Registrazione() {
             <div className="flex h-11 items-center gap-2 rounded-2xl border border-bordo px-4">
               <input
                 id="nome"
-                placeholder="Alessandro Nappa"
+                placeholder="Mario Rossi"
                 value={nomeCompleto}
                 onChange={(e) => setNomeCompleto(e.target.value)}
                 required
