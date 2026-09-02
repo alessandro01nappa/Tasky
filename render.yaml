@@ -12,7 +12,7 @@ services:
       - key: TASKY_AMMINISTRATORI
         sync: false
       - key: TASKY_FRONTEND_URL
-        sync: false
+        value: https://tasky-frontend-j9wi.onrender.com
       - key: TASKY_DB_URL
         sync: false
       - key: TASKY_DB_USERNAME
@@ -38,7 +38,7 @@ services:
       - key: TASKY_EMAIL_MITTENTE
         sync: false
       - key: TASKY_INDIRIZZO_PUBBLICO
-        sync: false
+        value: https://tasky-backend-7u6e.onrender.com
   - type: web
     name: tasky-frontend
     runtime: static
@@ -46,4 +46,4 @@ services:
     staticPublishPath: ./frontend/dist
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://tasky-backend-7u6e.onrender.com
