@@ -10,7 +10,7 @@ import {
   attivitaDiCategoria,
   categorie,
   creaRichiesta,
-  elencoLavoratori,
+  lavoratore,
   prezziDiRiferimento,
   type Attivita,
   type Categoria,
@@ -69,8 +69,8 @@ export default function NuovaRichiesta() {
   // se arrivo dal profilo di un lavoratore la richiesta è indirizzata solo a lui
   useEffect(() => {
     if (!fornitoreId) return;
-    elencoLavoratori()
-      .then((pagina) => setPrenotato(pagina.voci.find((l) => l.id === Number(fornitoreId)) ?? null))
+    lavoratore(Number(fornitoreId))
+      .then(setPrenotato)
       .catch(() => setPrenotato(null));
   }, [fornitoreId]);
 
