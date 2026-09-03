@@ -477,6 +477,54 @@ export function ritiraRichiestaDaAmministratore(id: number) {
   return invia<RichiestaAmministrata>(`/api/amministrazione/richieste/${id}/ritira`, "POST", {});
 }
 
+/**
+ * Il caricamento vuole un multipart, non JSON: non passa da chiama(), che
+ * forza "Content-Type: application/json" e romperebbe il confine del corpo.
+ */
+export async function caricaFoto(richiestaId: number, file: File | Blob) {
+  const token = leggiToken();
+  const corpo = new FormData();
+  corpo.append("file", file, "foto.jpg");
+
+  const risposta = await fetch(`${API_URL}/api/richieste/${richiestaId}/foto`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: corpo,
+  });
+
+  if (risposta.status === 401) {
+    if (token) {
+      cancellaToken();
+      window.location.assign("/accesso");
+    }
+    throw new Error("Sessione scaduta, accedi di nuovo");
+  }
+  if (!risposta.ok) {
+    throw new Error(await messaggioErrore(risposta));
+  }
+  return (await risposta.json()) as FotoRichiesta;
+}
+
+export function cancellaFoto(richiestaId: number, fotoId: number) {
+  return chiama<void>(`/api/richieste/${richiestaId}/foto/${fotoId}`, { method: "DELETE" });
+}
+
+/**
+ * Il contenuto vuole il token in un'intestazione, quindi un <img src> semplice
+ * non basta: si scarica a mano e si restituisce un URL locale da dare all'img.
+ * Chi la usa deve richiamare URL.revokeObjectURL quando non serve più.
+ */
+export async function anteprimaFoto(fotoId: number) {
+  const token = leggiToken();
+  const risposta = await fetch(`${API_URL}/api/foto/${fotoId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!risposta.ok) {
+    throw new Error(await messaggioErrore(risposta));
+  }
+  return URL.createObjectURL(await risposta.blob());
+}
+
 export function mieiIncarichi() {
   return chiama<Incarico[]>("/api/incarichi/miei");
 }

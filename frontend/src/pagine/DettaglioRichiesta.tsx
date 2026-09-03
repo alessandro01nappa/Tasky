@@ -1,6 +1,7 @@
 import { ArrowLeft, MapPin, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import FotoRichiesta from "../componenti/FotoRichiesta";
 import Pagina from "../componenti/Pagina";
 import RiquadroInfo from "../componenti/RiquadroInfo";
 import StatoSuccesso from "../componenti/StatoSuccesso";
@@ -178,6 +179,13 @@ export default function DettaglioRichiesta() {
         <p className="mt-2.5 text-sm text-fumo">{dati.descrizione}</p>
         <p className="mt-2.5 text-sm text-fumo">Pubblicata da {dati.cliente}</p>
       </div>
+
+      <FotoRichiesta
+        richiestaId={idRichiesta}
+        foto={dati.foto}
+        modificabile={mia}
+        onCambiate={(foto) => setDati({ ...dati, foto })}
+      />
 
       {mia && (
         <>
