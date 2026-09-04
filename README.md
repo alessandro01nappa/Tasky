@@ -6,6 +6,13 @@ lavori domestici, riparazioni, giardinaggio, montaggi, pulizie, traslochi e sgom
 Esiste un solo tipo di account. Lo stesso utente agisce da cliente quando pubblica una richiesta,
 e da fornitore quando si candida — ma solo dopo aver completato la verifica.
 
+## Demo online
+
+[Apri Tasky](https://tasky-frontend-j9wi.onrender.com)
+
+Email: `demo@tasky.it`  
+Password: `password123`
+
 ## Stack
 
 | Parte | Tecnologie |
