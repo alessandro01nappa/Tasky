@@ -2,9 +2,6 @@ import { cancellaToken, leggiToken } from "./sessione";
 
 const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
-// Chi svolge i lavori si chiama "Tasker" nei testi mostrati all'utente,
-// "lavoratore" nel codice di questa app e "fornitore" nel backend e nel database.
-
 export type TipoLavoratore = "PROFESSIONISTA" | "HOBBISTA";
 
 export type Categoria = {
@@ -25,15 +22,12 @@ export type Richiesta = {
   titolo: string;
   descrizione: string;
   citta: string;
-  /** Via e civico: arrivano solo al cliente e a chi ha preso il lavoro. */
   indirizzo: string | null;
   latitudine: number | null;
   longitudine: number | null;
-  /** Quanto dista dalla zona del lavoratore, se il backend sa dove sono entrambi. */
   distanzaKm: number | null;
   foto: FotoRichiesta[];
   budget: number | null;
-  /** Estremi di quando si può fare: uguali = giorno preciso, entrambi nulli = nessun vincolo. */
   dataPreferita: string | null;
   dataEntro: string | null;
   stato: "APERTA" | "ASSEGNATA" | "COMPLETATA" | "ANNULLATA";
@@ -91,7 +85,6 @@ export type Fornitore = {
   tipo: TipoLavoratore;
   tariffe: { categoriaId: number; categoria: string; tariffaOraria: number }[];
   terminiAccettati: boolean;
-  /** Perché un amministratore l'ha respinto, se è successo. */
   motivoRifiuto: string | null;
   categorie: string[];
   attivita: string[];
@@ -110,13 +103,10 @@ export type Lavoratore = {
   attivita: string[];
   media: number;
   numeroRecensioni: number;
-  /** Quando lavora di solito: si legge, non filtra ancora niente. */
   disponibilita: { giorno: string; dalle: string; alle: string }[];
-  /** Quanto dista dal punto indicato dal cliente, se ne ha indicato uno. */
   distanzaKm: number | null;
 };
 
-/** Una fetta di elenco: il backend non restituisce più tutto in una volta. */
 export type PaginaDi<T> = {
   voci: T[];
   pagina: number;
@@ -152,8 +142,6 @@ async function chiama<T>(percorso: string, opzioni: RequestInit = {}): Promise<T
     },
   });
 
-  // un 401 con token in mano significa sessione scaduta: si riparte dall'accesso.
-  // senza token siamo sul login e il 401 è solo una credenziale sbagliata.
   if (risposta.status === 401) {
     if (token) {
       cancellaToken();
@@ -166,7 +154,6 @@ async function chiama<T>(percorso: string, opzioni: RequestInit = {}): Promise<T
     throw new Error(await messaggioErrore(risposta));
   }
 
-  // /api/io risponde text/plain, gli altri endpoint JSON
   const tipo = risposta.headers.get("content-type") ?? "";
   const corpo = tipo.includes("application/json") ? await risposta.json() : await risposta.text();
   return corpo as T;
@@ -175,7 +162,6 @@ async function chiama<T>(percorso: string, opzioni: RequestInit = {}): Promise<T
 async function messaggioErrore(risposta: Response) {
   try {
     const corpo = await risposta.json();
-    // "detail" è dove il backend mette il motivo vero; gli altri sono ripieghi
     return corpo.detail || corpo.message || corpo.error || `Errore ${risposta.status}`;
   } catch {
     return `Errore ${risposta.status}`;
@@ -234,16 +220,13 @@ export function richiesteAperte(opzioni: { entroKm?: number; pagina?: number } =
 export type Luogo = {
   latitudine: number;
   longitudine: number;
-  /** La via col civico, o il nome del comune: è quello che si mostra dopo la scelta. */
   nome: string | null;
-  /** Via e civico separati: la proposta può già contenere un numero. */
   via: string | null;
   civico: string | null;
   indirizzo: string;
   citta: string | null;
 };
 
-/** I posti che somigliano a quello che si sta scrivendo, da far scegliere. */
 export function suggerisciLuoghi(testo: string, vicinoA?: { latitudine: number; longitudine: number }) {
   const parametri = new URLSearchParams({ testo });
   if (vicinoA) {
@@ -253,7 +236,6 @@ export function suggerisciLuoghi(testo: string, vicinoA?: { latitudine: number; 
   return chiama<Luogo[]>(`/api/luoghi/suggerimenti?${parametri}`);
 }
 
-/** Chiede al backend di tradurre un indirizzo scritto a mano in un punto sulla mappa. */
 export function cercaLuogo(indirizzo: string) {
   return chiama<Luogo>(`/api/luoghi?indirizzo=${encodeURIComponent(indirizzo)}`);
 }
@@ -285,7 +267,6 @@ export function creaRichiesta(dati: {
 
 export type PrezziDiRiferimento = {
   quanti: number;
-  /** "attivita" se il confronto è sul lavoro preciso, "categoria" se è più largo. */
   base: "attivita" | "categoria";
   media: number | null;
   minimo: number | null;
@@ -310,17 +291,14 @@ export function rifiutaRichiesta(id: number) {
   return invia<Richiesta>(`/api/richieste/${id}/rifiuta`, "POST", {});
 }
 
-/** Ritira il proprio annuncio, finché nessuno ci sta lavorando. */
 export function annullaRichiesta(id: number) {
   return invia<Richiesta>(`/api/richieste/${id}/annulla`, "POST", {});
 }
 
-/** Ferma un lavoro assegnato: lo possono fare sia il cliente sia il Tasker. */
 export function annullaIncarico(id: number) {
   return invia<Incarico>(`/api/incarichi/${id}/annulla`, "POST", {});
 }
 
-/** Ritira la propria candidatura, finché il cliente non ha deciso. */
 export function ritiraCandidatura(richiestaId: number, candidaturaId: number) {
   return chiama<void>(`/api/richieste/${richiestaId}/candidature/${candidaturaId}`, {
     method: "DELETE",
@@ -353,7 +331,6 @@ export function elencoLavoratori(
   return chiama<PaginaDi<Lavoratore>>(`/api/fornitore/elenco?${parametri}`);
 }
 
-/** Un Tasker solo: prima si cercava dentro l'elenco, che con le pagine non regge. */
 export function lavoratore(id: number) {
   return chiama<Lavoratore>(`/api/fornitore/${id}`);
 }
@@ -404,8 +381,6 @@ export function aggiornaProfiloFornitore(dati: {
 }) {
   return invia<Fornitore>("/api/fornitore", "PUT", dati);
 }
-
-// --- Amministrazione: la vede solo chi è configurato come tale ---
 
 export type StatoFornitore = "IN_ATTESA" | "APPROVATO" | "RIFIUTATO";
 
@@ -477,10 +452,6 @@ export function ritiraRichiestaDaAmministratore(id: number) {
   return invia<RichiestaAmministrata>(`/api/amministrazione/richieste/${id}/ritira`, "POST", {});
 }
 
-/**
- * Il caricamento vuole un multipart, non JSON: non passa da chiama(), che
- * forza "Content-Type: application/json" e romperebbe il confine del corpo.
- */
 export async function caricaFoto(richiestaId: number, file: File | Blob) {
   const token = leggiToken();
   const corpo = new FormData();
@@ -509,11 +480,6 @@ export function cancellaFoto(richiestaId: number, fotoId: number) {
   return chiama<void>(`/api/richieste/${richiestaId}/foto/${fotoId}`, { method: "DELETE" });
 }
 
-/**
- * Il contenuto vuole il token in un'intestazione, quindi un <img src> semplice
- * non basta: si scarica a mano e si restituisce un URL locale da dare all'img.
- * Chi la usa deve richiamare URL.revokeObjectURL quando non serve più.
- */
 export async function anteprimaFoto(fotoId: number) {
   const token = leggiToken();
   const risposta = await fetch(`${API_URL}/api/foto/${fotoId}`, {

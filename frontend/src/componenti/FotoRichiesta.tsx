@@ -4,13 +4,11 @@ import { cancellaFoto, caricaFoto, type FotoRichiesta as Foto } from "../lib/api
 import FotoAutenticata from "./FotoAutenticata";
 
 const MASSIMO = 5;
-/** Oltre questo lato più lungo non serve: pesa senza aggiungere dettaglio utile. */
 const LATO_MASSIMO = 1600;
 
 type Props = {
   richiestaId: number;
   foto: Foto[];
-  /** Solo chi ha pubblicato la richiesta carica e toglie: gli altri la vedono soltanto. */
   modificabile: boolean;
   onCambiate: (foto: Foto[]) => void;
 };
@@ -132,7 +130,6 @@ export default function FotoRichiesta({ richiestaId, foto, modificabile, onCambi
   );
 }
 
-/** Una foto da telefono è 4000px e 4 mega: qui torna a una taglia che basta a vedere il guasto. */
 function ridimensiona(file: File): Promise<Blob> {
   return new Promise((risolvi, rifiuta) => {
     const immagine = new Image();

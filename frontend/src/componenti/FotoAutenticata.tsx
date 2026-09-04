@@ -8,11 +8,6 @@ type Props = {
   onClick?: () => void;
 };
 
-/**
- * Un <img src> semplice non basta: il contenuto vuole il token nell'intestazione.
- * Si scarica a mano e si mostra da un URL locale, che si dimentica quando il
- * componente sparisce.
- */
 export default function FotoAutenticata({ id, className, onClick }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [fallita, setFallita] = useState(false);
@@ -25,11 +20,9 @@ export default function FotoAutenticata({ id, className, onClick }: Props) {
       .catch(() => !annullato && setFallita(true));
     return () => {
       annullato = true;
-      // revocarlo troppo presto romperebbe l'immagine mentre è ancora a schermo
     };
   }, [id]);
 
-  // l'URL locale non serve più quando questa istanza ne prende uno nuovo o sparisce
   useEffect(() => {
     return () => {
       if (url) URL.revokeObjectURL(url);
